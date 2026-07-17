@@ -1,0 +1,27 @@
+{
+  "name": "@geogiseo/mcp-server",
+  "version": "0.0.0",
+  "description": "GEOgiseo MCP 서버 — 마크다운 폴더 대상 위치 노트 생성·검색·조회 도구",
+  "type": "module",
+  "bin": {
+    "geogiseo-mcp": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@geogiseo/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
