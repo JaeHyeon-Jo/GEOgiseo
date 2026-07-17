@@ -1,0 +1,61 @@
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      # 개발 중 미리보기용. main으로 병합한 뒤에는 이 줄을 지워도 된다.
+      - claude/location-notes-app-design-hgjbko
+    paths:
+      - 'apps/web/**'
+      - 'packages/core/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # 버전은 루트 package.json의 packageManager에서 읽는다
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # core를 먼저 빌드해야 web이 @geogiseo/core의 dist를 소비할 수 있다.
+      - run: pnpm --filter @geogiseo/core build
+
+      - run: pnpm --filter @geogiseo/web build
+        env:
+          VITE_BASE: /GEOgiseo/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
