@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      # 개발 중 미리보기용. main으로 병합한 뒤에는 이 줄을 지워도 된다.
-      - claude/location-notes-app-design-hgjbko
     paths:
       - 'apps/web/**'
       - 'packages/core/**'
