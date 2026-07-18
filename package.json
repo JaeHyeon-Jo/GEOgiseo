@@ -1,0 +1,19 @@
+{
+  "name": "geogiseo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "위치 기반 노트앱 — 로컬 우선, 마크다운 기반",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
