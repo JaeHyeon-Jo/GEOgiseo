@@ -39,7 +39,8 @@ pnpm preview   # 빌드 결과 미리보기
 사용" 버튼은 브라우저와 앱에서 동일하게 동작한다(`src/geolocation.ts`).
 
 iOS 네이티브 프로젝트는 **맥 + Xcode + CocoaPods**가 필요하므로 저장소에 넣지 않고
-(`ios/`는 gitignore) 맥에서 생성한다:
+(`ios/`는 gitignore) 맥에서 생성한다. 맥에서 이어서 하는 전체 체크리스트는
+[../../docs/XCODE_MACBOOK.md](../../docs/XCODE_MACBOOK.md) 참고:
 
 ```bash
 pnpm --filter @geogiseo/web build   # 1. 웹 빌드(dist)
