@@ -31,6 +31,31 @@ pnpm build     # 타입체크 + 프로덕션 빌드
 pnpm preview   # 빌드 결과 미리보기
 ```
 
+## 모바일 앱 (Capacitor · iOS)
+
+이 웹앱을 Capacitor로 감싸 네이티브 iOS/Android 앱으로 만든다. UI 코드는 그대로
+재사용하고, GPS 같은 네이티브 기능만 얹는다. `@capacitor/geolocation`은 웹에선
+`navigator.geolocation`, 네이티브에선 실제 GPS를 자동으로 쓰므로 "📍 현재 위치
+사용" 버튼은 브라우저와 앱에서 동일하게 동작한다(`src/geolocation.ts`).
+
+iOS 네이티브 프로젝트는 **맥 + Xcode + CocoaPods**가 필요하므로 저장소에 넣지 않고
+(`ios/`는 gitignore) 맥에서 생성한다:
+
+```bash
+pnpm --filter @geogiseo/web build   # 1. 웹 빌드(dist)
+cd apps/web
+npx cap add ios                      # 2. iOS 프로젝트 생성 (최초 1회)
+npx cap sync ios                     # 3. 웹 자산 + 플러그인 동기화
+# 4. ios/App/App/Info.plist 에 위치 권한 설명 추가(필수):
+#    <key>NSLocationWhenInUseUsageDescription</key>
+#    <string>현재 위치를 노트에 기록합니다</string>
+npx cap open ios                     # 5. Xcode로 열어 실기기/시뮬레이터 실행
+```
+
+- 이후 웹 코드를 바꿀 때마다 `pnpm --filter @geogiseo/web build && npx cap sync ios`.
+- Android는 `npx cap add android`로 동일하게(맥 불필요).
+- GPS·카메라는 시뮬레이터에서 값이 가짜이므로 실제 검증은 실기기에서.
+
 ## 구현 메모
 
 - `@geogiseo/core`를 재사용해 파싱·직렬화·근접 인덱스를 공유한다(앱 고유 지도 로직만 여기 둔다).

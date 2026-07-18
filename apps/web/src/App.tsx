@@ -5,6 +5,7 @@ import {
   type LatLng,
   type LocationNote,
 } from '@geogiseo/core';
+import { getCurrentFix } from './geolocation.js';
 import { MapView } from './MapView.js';
 import { locationLabel, noteFilename, uniquePath } from './notes.js';
 import { sampleNotes } from './sample.js';
@@ -26,6 +27,7 @@ interface Draft {
   place: string;
   tags: string;
   body: string;
+  accuracy?: number; // GPS 정확도(m)
 }
 
 const SEOUL: LatLng = { lat: 37.5665, lng: 126.978 };
@@ -44,6 +46,7 @@ function draftFromNote(n: LocationNote): Draft {
     place: n.place ?? '',
     tags: n.tags.join(', '),
     body: n.body,
+    ...(n.accuracy !== undefined ? { accuracy: n.accuracy } : {}),
   };
 }
 
@@ -55,6 +58,7 @@ export default function App() {
   const [radiusMeters, setRadiusMeters] = useState(3000);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const existingPaths = useMemo(
     () => new Set(notes.map((n) => n.path).filter((p): p is string => !!p)),
@@ -111,6 +115,26 @@ export default function App() {
     setDraft(emptyDraft(queryPoint ?? SEOUL));
   }
 
+  // 현재 위치(GPS)로 편집 중인 노트의 좌표를 채운다. 웹/모바일 공통.
+  async function useCurrentLocation() {
+    if (!draft) return;
+    setError(null);
+    setLocating(true);
+    try {
+      const fix = await getCurrentFix();
+      setDraft((d) =>
+        d
+          ? { ...d, lat: String(fix.coords.lat), lng: String(fix.coords.lng), accuracy: fix.accuracy }
+          : d,
+      );
+      setQueryPoint(fix.coords);
+    } catch (e) {
+      setError(`위치를 가져오지 못했습니다: ${(e as Error).message}`);
+    } finally {
+      setLocating(false);
+    }
+  }
+
   async function saveDraft() {
     if (!draft) return;
     setError(null);
@@ -130,6 +154,7 @@ export default function App() {
       locations: base?.locations ?? [],
       capturedAt,
       ...(draft.place.trim() ? { place: draft.place.trim() } : {}),
+      ...(draft.accuracy !== undefined ? { accuracy: draft.accuracy } : {}),
       tags: normalizeTags(draft.tags),
       extraFrontmatter: base?.extraFrontmatter ?? {},
       body: draft.body,
@@ -282,7 +307,13 @@ export default function App() {
                 <input value={draft.lng} onChange={(e) => setDraft({ ...draft, lng: e.target.value })} />
               </label>
             </div>
-            <p className="muted small">💡 지도를 클릭하면 위 좌표가 채워집니다.</p>
+            <button className="loc-btn" onClick={useCurrentLocation} disabled={locating}>
+              {locating ? '📡 위치 찾는 중…' : '📍 현재 위치 사용'}
+            </button>
+            {draft.accuracy !== undefined && (
+              <p className="muted small">GPS 정확도 약 {draft.accuracy}m</p>
+            )}
+            <p className="muted small">💡 지도를 클릭하거나 현재 위치 버튼으로 좌표를 채웁니다.</p>
             <label>
               장소
               <input

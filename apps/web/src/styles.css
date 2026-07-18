@@ -246,6 +246,23 @@ button.link {
   gap: 8px;
 }
 
+.loc-btn {
+  align-self: flex-start;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+  font-weight: 600;
+}
+
+.loc-btn:hover:not(:disabled) {
+  background: #d1fae5;
+}
+
+.loc-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .coords label {
   flex: 1;
 }
