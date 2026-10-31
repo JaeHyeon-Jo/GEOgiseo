@@ -16,6 +16,9 @@ coverage/
 # logs
 *.log
 
+# Server-local tools, caches, and verification evidence
+.local/
+
 # Capacitor 네이티브 프로젝트 (플랫폼별로 `npx cap add ios|android`로 생성)
 /apps/web/ios/
 /apps/web/android/
