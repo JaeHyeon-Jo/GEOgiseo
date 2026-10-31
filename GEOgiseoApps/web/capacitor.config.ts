@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize } from '@capacitor/keyboard';
 
-// Capacitor는 apps/web의 빌드 결과(dist)를 네이티브 앱으로 감싼다.
-// iOS 네이티브 프로젝트는 맥에서 `npx cap add ios`로 생성한다(README 참고).
+// Capacitor는 GEOgiseoApps/web의 dist를 기존 네이티브 앱으로 감싼다.
+// ios:sync로 복사한 뒤 로컬 Swift 플러그인 등록을 복원한다.
 const config: CapacitorConfig = {
   appId: 'app.geogiseo',
   appName: 'GEOgiseo',

@@ -1,0 +1,101 @@
+name: Verify
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-and-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+
+  apple-simulators:
+    needs: web-and-core
+    runs-on: xcode-27
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Prepare Capacitor assets and CocoaPods
+        env:
+          VITE_BASE: /
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @geogiseo/core build
+          pnpm --filter @geogiseo/web ios:sync
+          cd GEOgiseoApps/web/ios/App
+          pod install --deployment
+      - name: Select available simulators
+        run: |
+          xcodebuild -version
+          python3 - <<'PY'
+          import json, os, subprocess
+          devices = json.loads(subprocess.check_output(
+              ['xcrun', 'simctl', 'list', 'devices', 'available', '--json']))['devices']
+          for platform, name, variable in [
+              ('iOS', 'iPhone', 'GEOGISEO_IPHONE_ID'),
+              ('watchOS', 'Apple Watch', 'GEOGISEO_WATCH_ID'),
+          ]:
+              candidates = [(tuple(map(int, runtime.split(f'.{platform}-')[1].split('-'))), device)
+                            for runtime, items in devices.items() if f'.{platform}-' in runtime
+                            for device in items if device.get('isAvailable') and name in device['name']]
+              if not candidates:
+                  raise SystemExit(f'No available {name} simulator')
+              version, device = max(candidates, key=lambda item: (item[0], item[1]['name']))
+              with open(os.environ['GITHUB_ENV'], 'a') as output:
+                  output.write(f"{variable}={device['udid']}\n")
+              print(platform, version, device['name'])
+          PY
+      - name: Build iPhone app including embedded Watch app
+        run: |
+          xcodebuild build \
+            -workspace GEOgiseoApps/web/ios/App/App.xcworkspace \
+            -scheme GEOgiseo \
+            -destination "platform=iOS Simulator,id=$GEOGISEO_IPHONE_ID" \
+            -derivedDataPath "$RUNNER_TEMP/GEOgiseo-iOS" \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Run Watch unit tests
+        run: |
+          xcodebuild test \
+            -workspace GEOgiseoApps/web/ios/App/App.xcworkspace \
+            -scheme 'GeoWatch Watch App' \
+            -destination "platform=watchOS Simulator,id=$GEOGISEO_WATCH_ID" \
+            '-only-testing:GeoWatch Watch AppTests' \
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RUNNER_TEMP/GEOgiseo-Watch-tests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Save Watch test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEOgiseo-Watch-tests
+          path: ${{ runner.temp }}/GEOgiseo-Watch-tests.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
