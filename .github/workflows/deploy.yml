@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/web/**'
+      - 'GEOgiseoApps/web/**'
       - 'packages/core/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/web/dist
+          path: GEOgiseoApps/web/dist
 
   deploy:
     needs: build
