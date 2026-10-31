@@ -51,6 +51,7 @@
 - 환경 구성: [PR #4](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/4), 검증한 코드 `4a9ce787100061ce9f8c2a13cecd30d304477b60`.
 - [Verify run 41252896587](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41252896587) 전체 성공: Node 22의 TS 빌드·타입 검사·테스트 47개(core 27·web 7·MCP 13), Xcode 27.1의 iOS 27.1 iPhone Duo 빌드(Watch 포함)·watchOS 27.0 Apple Watch Ultra 4 단위 테스트 4개 통과. Watch xcresult 아티팩트 7일 보관.
 - 서버에서도 잠금 파일 설치·전체 TS 빌드·타입 검사·테스트, `ios:sync`·커스텀 플러그인 3개 등록, YAML·내장 Python·plist·스킴·문서 링크·diff 검사 통과. 원격 로그는 Git 제외 `.local/verification-20261101/`에 보관한다.
+- PR #4는 open·미머지다. 현재 main은 시작 커밋 `3988990`이며 이번 구성으로 새 배포를 시작하지 않았다. 자동 승인 검토가 배포를 유발할 수 있는 main 머지에는 별도 명시적 승인이 필요하다는 사유로 거절했다. 사용자가 머지를 승인하면 최신 PR head를 지정해 반영하고 기존 Cloud 상태를 확인한다.
 
 ## 미확인 사항과 다음 일
 
