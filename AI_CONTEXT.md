@@ -48,10 +48,12 @@
 - 서버 체크아웃·저장소별 SSH·Git 작성자 설정 완료. D+Day 저장소·전역 SSH/Git 설정은 변경하지 않았다.
 - 시작 main: `3988990c61fc94e9359e3ada87a3c83078ff10bf`. 커밋 상태 `GEOgiseo | GEOgiseo` success 확인.
 - 기존 Cloud 빌드: https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/b8c41b56-ffc3-43f4-af22-a71eff359fbf
-- 구성 브랜치: `setup/remote-development`. 잠금 파일 설치·전체 TS 빌드·타입 검사·테스트 통과. `ios:sync` 실행과 커스텀 플러그인 3개 등록, 워크플로 YAML·내장 Python·plist·스킴·문서 링크·diff 검사 통과. Apple 빌드·Watch 테스트는 원격 Verify 확인 진행 중.
+- 환경 구성: [PR #4](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/4), 검증한 코드 `4a9ce787100061ce9f8c2a13cecd30d304477b60`.
+- [Verify run 41252896587](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41252896587) 전체 성공: Node 22의 TS 빌드·타입 검사·테스트 47개(core 27·web 7·MCP 13), Xcode 27.1의 iOS 27.1 iPhone Duo 빌드(Watch 포함)·watchOS 27.0 Apple Watch Ultra 4 단위 테스트 4개 통과. Watch xcresult 아티팩트 7일 보관.
+- 서버에서도 잠금 파일 설치·전체 TS 빌드·타입 검사·테스트, `ios:sync`·커스텀 플러그인 3개 등록, YAML·내장 Python·plist·스킴·문서 링크·diff 검사 통과. 원격 로그는 Git 제외 `.local/verification-20261101/`에 보관한다.
 
 ## 미확인 사항과 다음 일
 
 - 실제 Cloud 시작 조건·배포 후속 작업·TestFlight 그룹과 설치 가능 여부는 App Store Connect에서 별도 확인 필요. 커밋 success만으로 TestFlight 배포 완료를 단정하지 않는다.
-- 신규 Verify 원격 실행 결과를 확인하고 최종 상태를 기록한다. 서버 정적 검사만으로 Apple 빌드 성공을 주장하지 않는다.
+- 후속 변경은 작업 브랜치 → PR Verify → main 반영 → 기존 Cloud 빌드/배포 확인 순서로 진행한다.
 - GPS·Vault 폴더 권한·iCloud 왕복·WatchConnectivity·컴플리케이션·단축어는 실제 기기로 확인한다.
