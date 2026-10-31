@@ -1,0 +1,1925 @@
+/* iOS 27 디자인 언어:
+   systemBlue 액센트, grouped 배경(#f2f2f7) 위 흰색 inset 카드,
+   떠 있는 컨트롤은 Liquid Glass(반투명 + blur + 하이라이트 테두리) */
+:root {
+  --accent: #007aff;
+  --accent-hover: #0068d9;
+  --accent-focus: #007aff;
+  --accent-tint: rgba(0, 122, 255, 0.1);
+  --danger: #ff3b30;
+
+  --ink: #000000;
+  --muted: #8a8a8e;
+  --muted-strong: #6c6c70;
+
+  --canvas: #ffffff;
+  --parchment: #f2f2f7; /* systemGroupedBackground */
+  --pearl: #fafafc;
+  --fill: rgba(118, 118, 128, 0.12); /* tertiarySystemFill */
+
+  --hairline: rgba(60, 60, 67, 0.18);
+  --divider: rgba(60, 60, 67, 0.1);
+
+  --radius-card: 20px;
+
+  /* Liquid Glass */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-blur: saturate(180%) blur(24px);
+  --glass-border: 0.5px solid rgba(255, 255, 255, 0.75);
+  --glass-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --bg: var(--parchment);
+  --panel: var(--canvas);
+  --border: var(--hairline);
+  --text: var(--ink);
+  --accent-strong: var(--accent-hover);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+/* iOS WebKit이 넓은 블록의 글자를 임의로 키우는 text autosizing 방지 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family:
+    -apple-system,
+    system-ui,
+    'SF Pro Text',
+    BlinkMacSystemFont,
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 17px;
+  line-height: 1.4;
+  letter-spacing: -0.022em;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── 앱 루트 ─────────────────────────────────────────── */
+.app {
+  height: 100%;
+}
+
+/* ── 에러 배너 ───────────────────────────────────────── */
+.error {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  padding: 10px 20px;
+  background: #fff5f5;
+  color: #c7362f;
+  border-bottom: 1px solid #f6d4d2;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+
+/* ── 탭 전환 입장 애니메이션 ─────────────────────────── */
+@keyframes tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── 탭 패널 공통 ────────────────────────────────────── */
+.tab-pane {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--parchment);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: tab-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ── 탭 헤더 ─────────────────────────────────────────── */
+.tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px 10px;
+  background: var(--parchment);
+  flex-shrink: 0;
+}
+
+/* Large Title */
+.tab-header strong {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+/* ── 근처 필터 바 ─────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 16px 8px;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  background: var(--canvas);
+  flex-shrink: 0;
+}
+
+/* ── 근처 탭 (SVG 비주얼) ────────────────────────────── */
+.nearby-visual-pane {
+  /* tab-pane 상속 — overflow: hidden 유지 */
+}
+
+.nearby-scale-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-strong);
+  background: var(--fill);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nearby-svg-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 4px calc(84px + env(safe-area-inset-bottom) + 8px);
+  overflow: hidden;
+  touch-action: none; /* 핀치 줌 제스처를 직접 처리 */
+}
+
+/* 현재 위치한 장소 칩 (레이더 상단 중앙) */
+.nearby-here-chips {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: calc(100% - 120px); /* 좌/우 컨트롤과 겹치지 않게 */
+  pointer-events: none;
+}
+
+.nearby-here-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.nearby-here-emoji { font-size: 14px; }
+
+.nearby-here-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 범위 밖 안내 pill */
+.nearby-outside-hint {
+  position: absolute;
+  bottom: calc(84px + env(safe-area-inset-bottom) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.nearby-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 560px;
+  max-height: 560px;
+  display: block;
+  touch-action: none;
+}
+
+.nearby-no-loc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* ── 지도 탭: 네이티브 지도가 화면 위~탭바 위를 채운다 (슬롯은 크기 변화 감지용) ── */
+.map-pane {
+  top: 0;
+}
+
+.map-slot {
+  flex: 1;
+}
+
+/* 지도 아래 · 탭바 위 기간 필터 (네이티브 지도는 이 위까지만 그린다) */
+.map-footer {
+  flex-shrink: 0;
+  padding: 8px 20px calc(80px + env(safe-area-inset-bottom));
+  background: var(--parchment);
+}
+
+.map-period {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-period-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+}
+
+.map-period-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.map-period-count {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+button.link.map-period-reset {
+  font-size: 14px;
+  padding: 2px 0;
+}
+
+.map-period-slider {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+  height: 28px;
+}
+
+.map-period-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.nearby-fab {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom) + 12px);
+  right: 20px;
+  z-index: 400;
+}
+
+/* ── 설정: 즐겨찾기 장소 ─────────────────────────────── */
+.settings-place-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--canvas);
+  margin-bottom: 0;
+  gap: 12px;
+}
+
+
+.settings-place-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-place-name {
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.settings-place-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.settings-place-inside {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 현재 위치 버튼 */
+.loc-btn {
+  align-self: flex-start;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.loc-btn:hover:not(:disabled) { background: rgba(0, 122, 255, 0.16); }
+.loc-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── FAB ─────────────────────────────────────────────── */
+.fab {
+  width: 50px;
+  height: 50px;
+  border-radius: 9999px;
+  border: var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--glass-shadow);
+  cursor: pointer;
+  transition: transform 0.3s var(--spring);
+  padding: 0;
+}
+
+.fab svg {
+  width: 20px;
+  height: 20px;
+}
+
+.fab:active {
+  transform: scale(1.1);
+}
+
+.fab:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── 신규: 풀스크린 에디터 ──────────────────────────── */
+.fullscreen-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  animation: tab-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+.fse-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+
+/* 헤더 버튼 — iOS 27 glass 캡슐 */
+button.link.fse-cancel {
+  font-size: 17px;
+  color: var(--ink);
+  padding: 8px 16px;
+  min-width: 44px;
+  min-height: 40px;
+  border-radius: 9999px;
+  border: var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+button.link.fse-cancel:hover {
+  text-decoration: none;
+}
+
+.fse-save {
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  padding: 8px 18px;
+  min-width: 44px;
+  min-height: 40px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+
+.fse-save:hover {
+  background: var(--accent-hover);
+}
+
+.fse-save:active {
+  transform: scale(0.95);
+}
+
+.fse-subject {
+  font: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  border: none;
+  outline: none;
+  padding: 20px 20px 12px;
+  width: 100%;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.fse-subject::placeholder {
+  color: var(--hairline);
+}
+
+.fse-divider {
+  height: 0.5px;
+  background: var(--hairline);
+  margin: 0 20px;
+  flex-shrink: 0;
+}
+
+.fse-body {
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 16px 20px;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+  width: 100%;
+  flex: 1;
+  background: transparent;
+}
+
+.fse-body::placeholder {
+  color: var(--muted);
+}
+
+.fse-hint {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 0 20px 8px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── 하단 내비게이션: 풀 와이드 ──────────────────────── */
+.nav-bar-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  padding: 8px 20px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  pointer-events: none;
+  /* 탭 바 아래로 스크롤되는 콘텐츠를 살짝 흐리게 (iOS scroll edge effect) */
+  background: linear-gradient(to bottom, rgba(242, 242, 247, 0), rgba(242, 242, 247, 0.85) 70%);
+}
+
+.bottom-nav {
+  pointer-events: all;
+  position: relative;
+  display: flex;
+  width: 100%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 9999px;
+  padding: 4px;
+  box-shadow: var(--glass-shadow);
+  gap: 0;
+}
+
+/* 슬라이딩 인디케이터 — 선택된 탭 뒤의 유리 알약 */
+.nav-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 4);
+  border-radius: 9999px;
+  background: rgba(118, 118, 128, 0.14);
+  transform: translateX(calc(var(--i, 0) * 100%));
+  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nav-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 4px 6px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+  flex: 1;
+  transition: color 0.22s ease, transform 0.3s var(--spring);
+}
+
+.nav-item:hover {
+  background: transparent;
+}
+
+.nav-item svg {
+  width: 26px;
+  height: 26px;
+  transition: transform 0.45s var(--spring);
+}
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-item.active svg {
+  transform: scale(1.04);
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
+/* ── 노트 목록 ───────────────────────────────────────── */
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  flex: 1;
+}
+
+.note-list li {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.note-list li:hover {
+  background: var(--parchment);
+}
+
+.note-list li.selected {
+  background: var(--parchment);
+  border-left: 2px solid var(--accent);
+  padding-left: 18px;
+}
+
+.note-title {
+  font-weight: 600;
+  letter-spacing: -0.014em;
+}
+
+.note-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.tags {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--accent-tint);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+/* ── 설정 탭 ─────────────────────────────────────────── */
+.settings-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-strong);
+  letter-spacing: -0.01em;
+  padding: 0 16px;
+}
+
+.settings-section > p.muted {
+  padding: 0 16px;
+}
+
+.settings-card {
+  background: var(--canvas);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-vault-name {
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.settings-vault-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.settings-row-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── 편집기 시트 ─────────────────────────────────────── */
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.editor-sheet {
+  background: var(--parchment);
+  border-radius: 34px 34px 0 0;
+  margin: 0 6px;
+  /* 오버레이 기준 — 키보드가 뜨면 오버레이가 줄어들어 시트도 그 안에 맞춰진다 */
+  max-height: calc(100% - max(12px, env(safe-area-inset-top)));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.14);
+  animation: sheet-up 0.4s var(--spring) both;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.editor-handle {
+  width: 36px;
+  height: 5px;
+  background: rgba(60, 60, 67, 0.3);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.editor-inner {
+  padding: 16px 20px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 공간이 좁아지면 항목을 찌그러뜨리지 않고 스크롤한다 */
+.editor-inner > * {
+  flex-shrink: 0;
+}
+
+/* 장소 추가/편집 — 풀스크린. 화면 크기는 고정하고 본문만 스크롤 (키보드 때 리레이아웃 최소화) */
+.place-page {
+  z-index: 2100;
+  animation-duration: 0.18s;
+}
+
+.place-page .editor-inner {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-top: 4px;
+}
+
+/* 키보드 위에 붙을 땐 홈 인디케이터 여백이 필요 없다 */
+.editor-overlay.kb-open .editor-inner {
+  padding-bottom: 16px;
+}
+
+.editor-inner label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--muted-strong);
+}
+
+.editor-inner input,
+.editor-inner textarea {
+  font: inherit;
+  font-size: 17px;
+  color: var(--ink);
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  width: 100%;
+  background: var(--canvas);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editor-inner input:focus,
+.editor-inner textarea:focus {
+  outline: none;
+  border-color: var(--accent-focus);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+}
+
+.editor-inner textarea {
+  resize: vertical;
+}
+
+/* ── 공통 버튼 ───────────────────────────────────────── */
+button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.016em;
+  padding: 10px 18px;
+  border: none;
+  background: var(--fill);
+  color: var(--accent);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.3s var(--spring), opacity 0.2s ease;
+}
+
+button:hover {
+  background: rgba(118, 118, 128, 0.18);
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+button.primary:hover {
+  background: var(--accent-hover);
+}
+
+button.link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  border-radius: 0;
+}
+
+button.link:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+/* ── 공통 유틸 ───────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty {
+  padding: 24px 20px;
+}
+
+/* ── 근처 탭: 레이더/지도 세그먼트 컨트롤 ──────────────── */
+.view-seg {
+  display: flex;
+  background: var(--fill);
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 0;
+}
+
+.view-seg-btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.3s var(--spring);
+  letter-spacing: -0.01em;
+}
+
+.view-seg-btn:hover {
+  background: transparent;
+}
+
+.view-seg-btn.active {
+  background: var(--canvas);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 근처 탭: 지도 컨테이너 ───────────────────────────── */
+.nearby-map-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Leaflet 맵 컨테이너 기본 크기 ─────────────────────── */
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── 지도 위치 선택 오버레이 ────────────────────────────── */
+.map-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+
+.map-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+.map-picker-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+
+.map-picker-confirm {
+  font-weight: 600;
+}
+
+.map-picker-hint {
+  text-align: center;
+  padding: 6px 20px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.map-picker-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-picker-body .map {
+  height: 100%;
+}
+
+.map-picker-footer {
+  padding: 10px 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── 장소 폼: 검색 ────────────────────────────────────── */
+.place-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.place-search-row input {
+  flex: 1;
+  font: inherit;
+  font-size: 17px;
+  color: var(--ink);
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--canvas);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.place-search-row input:focus {
+  outline: none;
+  border-color: var(--accent-focus);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+}
+
+.place-search-results {
+  list-style: none;
+  padding: 0;
+  margin: -4px 0 0;
+  background: var(--canvas);
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.place-search-results li {
+  padding: 12px 14px;
+  font-size: 15px;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  line-height: 1.4;
+}
+
+.place-search-results li:last-child {
+  border-bottom: none;
+}
+
+.place-search-results li:hover,
+.place-search-results li:active {
+  background: var(--parchment);
+}
+
+/* ── 장소 폼: 위치 버튼 행 ──────────────────────────────── */
+.place-loc-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── 장소 폼: 반경 슬라이더 (커스텀) ──────────────────── */
+.place-radius-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--pct, 5%),
+    rgba(120, 120, 128, 0.2) var(--pct, 5%)
+  );
+  outline: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 6px 0 2px;
+}
+
+.place-radius-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px;
+  height: 24px;
+  border-radius: 9999px;
+  background: white;
+  border: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+}
+
+.place-radius-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.place-radius-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+/* ── 장소 폼: 이모지 직접 입력 ─────────────────────────── */
+.emoji-input {
+  font-size: 28px !important;
+  text-align: center;
+  letter-spacing: 4px;
+  padding: 8px 12px !important;
+  max-width: 120px;
+  border-radius: 11px;
+}
+
+/* ── Apple Maps 토큰 미설정 안내 ────────────────────────── */
+.mapkit-notice {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--parchment);
+  border-radius: var(--radius-card);
+  text-align: center;
+}
+
+.mapkit-notice-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+}
+
+.mapkit-notice p {
+  margin: 0 0 8px;
+  line-height: 1.55;
+}
+
+.mapkit-notice code {
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* ── 신규 탭: 제목 없는 퀵 캡처 ────────────────────────── */
+.fse-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  overflow: hidden;
+}
+
+.fse-loc {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fse-body-full {
+  font-size: 17px;
+  line-height: 1.7;
+  padding-top: 20px;
+}
+
+.fse-save:disabled {
+  opacity: 0.4;
+}
+
+/* ── 작성 하단 액션바 (에디터 맨 아래 = 키보드 바로 위) ──────── */
+.compose-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  background: var(--canvas);
+}
+
+.fullscreen-editor:focus-within .compose-bar {
+  padding-bottom: 8px;
+}
+
+.compose-btn {
+  border: var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 9999px;
+  font-size: 17px;
+  font-weight: 600;
+  /* 탭 영역 확보 — 화면 양 끝 작은 버튼이 잘 안 눌리던 문제 해결 (최소 44px 권장) */
+  padding: 10px 14px;
+  min-width: 56px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+.compose-cancel { color: var(--ink); }
+.compose-save { color: #fff; background: var(--accent); border-color: transparent; }
+.compose-save:hover { background: var(--accent-hover); }
+.compose-save:disabled { opacity: 0.35; }
+
+.compose-loc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: none;
+  background: var(--fill);
+  border-radius: 9999px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.compose-loc-pin { flex-shrink: 0; }
+.compose-loc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── 메모 탭: 타임라인 ──────────────────────────────────── */
+.note-tab-header {
+  padding-bottom: 10px;
+  border-bottom: none;
+}
+
+.note-view-controls {
+  display: flex;
+  justify-content: center;
+  padding: 0 16px 10px;
+  /* 헤더·검색과 같은 배경 — 흰 띠가 끼면 상단이 끊겨 보이고 선택된 흰 세그먼트가 묻힌다 */
+  background: var(--parchment);
+  flex-shrink: 0;
+}
+
+.note-view-controls .view-seg {
+  width: min(100%, 320px);
+}
+
+.note-view-controls .view-seg-btn {
+  flex: 1;
+}
+
+.timeline {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px calc(96px + env(safe-area-inset-bottom));
+}
+
+.timeline-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.timeline-group {
+  margin-bottom: 8px;
+}
+
+/* 섹션 헤더 — 스크롤 시 상단에 붙는 반투명 바 */
+.timeline-date-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin: 0 -16px;
+  padding: 14px 32px 8px;
+  position: sticky;
+  top: 0;
+  background: rgba(242, 242, 247, 0.82);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 2;
+}
+
+.timeline-item {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--canvas);
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+
+.timeline-item:active {
+  background: #e9e9ee;
+}
+
+.timeline-item.selected {
+  background: var(--accent-tint);
+}
+
+.timeline-item:focus-visible {
+  position: relative;
+  z-index: 2;
+  outline: 2px solid var(--accent-focus);
+  outline-offset: -2px;
+}
+
+.timeline-content {
+  min-width: 0;
+}
+
+.timeline-meta {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.timeline-meta-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 한 노트 안 이어 쓴 기록 개수 배지 — 메타 줄 오른쪽 끝 */
+.entry-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: auto;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.timeline-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  overflow: hidden;
+}
+
+.timeline-tags .tag {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42%;
+}
+
+.timeline-tags .tag-more {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+/* 현재 위치에서 가까운 메모는 일반 목록과 구분되는 가로 카드로 한 번만 노출한다. */
+.nearby-memo-section {
+  margin: 12px -16px 14px;
+}
+
+.nearby-memo-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 20px 8px;
+}
+
+.nearby-memo-heading strong {
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.nearby-memo-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nearby-memo-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 20px 6px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nearby-memo-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.nearby-memo-card {
+  flex: 0 0 min(72vw, 260px);
+  /* flex 아이템 기본 min-width:auto 면 nowrap 제목 길이만큼 카드가 늘어난다 */
+  min-width: 0;
+  overflow: hidden;
+  min-height: 126px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  border: 0.5px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--canvas);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
+  text-align: left;
+  scroll-snap-align: start;
+}
+
+/* 공통 button:hover 회색이 iOS에서 탭 후 남지 않도록 카드 배경 유지 */
+.nearby-memo-card:hover {
+  background: var(--canvas);
+}
+
+.nearby-memo-card:active {
+  background: #e9e9ee;
+}
+
+.nearby-memo-card strong {
+  width: 100%;
+  color: var(--ink);
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nearby-memo-distance {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nearby-memo-preview {
+  width: 100%;
+  color: var(--muted-strong);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nearby-memo-place {
+  width: 100%;
+  margin-top: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 제목 없는 본문 미리보기 */
+.timeline-preview-first {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-preview-rest {
+  font-size: 15px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ── 노트 삭제 버튼 ─────────────────────────────────────── */
+.delete-note-btn {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--danger);
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.delete-note-btn:active {
+  opacity: 0.6;
+}
+
+/* ── 설정: 컴팩트 보관함 행 ─────────────────────────────── */
+.vault-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--canvas);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+}
+
+.vault-row-empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.vault-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.vault-name {
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.vault-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vault-btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  background: var(--fill);
+  color: var(--accent);
+}
+
+/* ── 노트 전체화면 편집 ────────────────────────────────── */
+/* 헤더 제목 */
+.note-edit-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
+}
+
+/* 헤더 우측 액션 (복사 + 저장) */
+.fse-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+button.link.fse-copy {
+  font-size: 16px;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 6px;
+}
+
+button.link.fse-copy:hover {
+  text-decoration: none;
+}
+
+/* ── 메모 탭 검색 ─────────────────────────────────────── */
+.note-search {
+  position: relative;
+  margin: 0 16px 8px;
+  flex-shrink: 0;
+}
+
+.note-search input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 16px; /* 16px 미만이면 iOS가 포커스 시 확대한다 */
+  padding: 9px 36px 9px 14px;
+  border: none;
+  outline: none;
+  border-radius: 9999px;
+  background: var(--fill);
+  color: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.note-search input::-webkit-search-cancel-button {
+  display: none; /* 자체 지우기 버튼 사용 */
+}
+
+.note-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(118, 118, 128, 0.24);
+  color: var(--canvas);
+  font-size: 12px;
+  line-height: 26px;
+}
+
+/* 기존 본문 카드 — parchment 배경. 기본은 최대 40vh 미리보기, 탭(읽기)/편집 시 남는 공간을 채운다 */
+.note-existing-wrap {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 12px 0;
+  border-radius: var(--radius-card);
+  background: var(--parchment);
+  flex: 0 1 auto;
+  min-height: 72px;
+  max-height: 40vh;
+  overflow: hidden;
+}
+
+.existing-expanded .note-existing-wrap {
+  flex: 1 1 auto;
+  max-height: none;
+}
+
+/* 읽기 전용 본문 */
+.note-read {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 18px 4px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted-strong);
+  cursor: pointer;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.existing-expanded .note-read {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.note-read-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-read-sep {
+  padding: 10px 0;
+}
+
+.note-read-empty {
+  margin: 0;
+}
+
+.note-existing-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 4px 18px 10px;
+  flex-shrink: 0;
+}
+
+.note-existing-actions button.link {
+  min-height: 32px;
+  font-size: 14px;
+}
+
+/* 편집 모드 textarea — 카드 안을 채운다 */
+.note-edit-existing {
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 16px 18px 4px;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+}
+
+/* 구분선: ─── 14:30 ─── */
+.note-edit-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 20px;
+  flex-shrink: 0;
+}
+
+.note-edit-divider::before,
+.note-edit-divider::after {
+  content: '';
+  flex: 1;
+  height: 0.5px;
+  background: var(--hairline);
+}
+
+.note-edit-time {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 이어서 기록 textarea */
+.note-edit-append {
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 12px 20px;
+  background: var(--canvas);
+  flex: 1 1 0;
+  min-height: 88px;
+}
+
+/* 기존 내용을 크게 볼 땐 이어서 기록 칸은 작게 유지 (입력은 계속 가능) */
+.existing-expanded .note-edit-append {
+  flex: 0 0 96px;
+}
+
+/* 키보드가 떠 있으면 위치/삭제 줄을 숨겨 입력칸 공간 확보 */
+.note-editor.kb-open .note-edit-loc,
+.note-editor.kb-open .note-delete-link {
+  display: none;
+}
+
+/* 메모 위치 변경 */
+.note-edit-loc {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border-top: 0.5px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.note-edit-loc-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.note-edit-loc-icon { font-size: 14px; }
+.note-edit-loc-changed { color: var(--accent); font-weight: 600; }
+
+/* 삭제 버튼 */
+.note-delete-link {
+  color: var(--danger);
+  background: none;
+  border: none;
+  font-size: 14px;
+  padding: 12px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: block;
+  width: 100%;
+}
+
+/* ── 스와이프 삭제 행 (inset 카드) ─────────────────────── */
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  margin-bottom: 8px;
+  /* iOS WebKit에서 transform 자식이 둥근 모서리 클리핑을 벗어나는 문제 방지 */
+  isolation: isolate;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+.swipe-action {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+}
+
+button.swipe-action-btn {
+  color: #fff;
+  background: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 4px 10px;
+}
+
+.swipe-fg {
+  position: relative;
+  z-index: 1;
+  background: var(--canvas);
+  border-radius: var(--radius-card);
+}
+
+/* 삭제 직후 되돌릴 수 있는 하단 피드백. 내비게이션보다 위에 떠서 조작을 막지 않는다. */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 2600;
+  width: min(calc(100% - 32px), 420px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px 11px 16px;
+  border: var(--glass-border);
+  border-radius: 16px;
+  background: rgba(35, 35, 37, 0.92);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+  color: #fff;
+  font-size: 14px;
+  animation: undo-toast-in 0.28s var(--spring) both;
+}
+
+.undo-toast span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.undo-toast button {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #8fc3ff;
+  font-weight: 700;
+  padding: 7px 10px;
+}
+
+@keyframes undo-toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .undo-toast,
+  .tab-pane,
+  .nav-indicator,
+  .swipe-fg {
+    animation: none;
+    transition: none !important;
+  }
+}
+
+/* 설정의 '＋ 장소 추가' 같은 섹션 하단 버튼 */
+.settings-section > button:not(.primary) {
+  align-self: stretch;
+  background: var(--canvas);
+  padding: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-card);
+}

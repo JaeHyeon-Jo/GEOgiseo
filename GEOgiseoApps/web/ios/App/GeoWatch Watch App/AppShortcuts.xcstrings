@@ -1,0 +1,85 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "${applicationName} 기록" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName} 기록"
+          }
+        }
+      }
+    },
+    "${applicationName} 메모" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "${applicationName} 메모",
+              "${applicationName}에 메모",
+              "${applicationName} 기록",
+              "${applicationName} 적어",
+              "${applicationName} 적어줘",
+              "${applicationName}에 적어줘"
+            ]
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "${applicationName} 메모"
+          }
+        }
+      }
+    },
+    "${applicationName} 적어" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName} 적어"
+          }
+        }
+      }
+    },
+    "${applicationName} 적어줘" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName} 적어줘"
+          }
+        }
+      }
+    },
+    "${applicationName}에 메모" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName}에 메모"
+          }
+        }
+      }
+    },
+    "${applicationName}에 적어줘" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${applicationName}에 적어줘"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
