@@ -13,12 +13,16 @@ public class VaultAccessPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDel
         CAPPluginMethod(name: "pickFolder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readNotes", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "writeNote", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "deleteNote", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "deleteNote", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "readPlaces", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "writePlaces", returnType: CAPPluginReturnPromise)
     ]
 
     private var pickCall: CAPPluginCall?
     private let fileQueue = DispatchQueue(label: "app.geogiseo.vault-files", qos: .userInitiated)
     private let maximumNoteSize = 5 * 1024 * 1024
+    private let maximumPlacesSize = 1024 * 1024
+    private let placesFilename = "geogiseo-places.json"
 
     // MARK: - 폴더 선택
 
@@ -188,6 +192,97 @@ public class VaultAccessPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDel
                 call.reject("삭제 실패: \(error.localizedDescription)")
             }
         }
+    }
+
+    // MARK: - 즐겨찾기 (고정 파일만 접근, Markdown 노트 경로 검증은 유지)
+
+    @objc func readPlaces(_ call: CAPPluginCall) {
+        guard let bookmark = call.getString("bookmark") else { call.reject("bookmark 가 필요합니다."); return }
+        fileQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let (folderURL, refreshed) = try self.resolveBookmark(bookmark)
+                let didAccess = folderURL.startAccessingSecurityScopedResource()
+                defer { if didAccess { folderURL.stopAccessingSecurityScopedResource() } }
+
+                // 폴더 자체의 접근 실패를 '즐겨찾기 파일 없음'으로 취급하지 않는다.
+                let folderValues = try folderURL.resourceValues(forKeys: [.isDirectoryKey])
+                guard folderValues.isDirectory == true else {
+                    throw self.vaultError(code: 2, description: "보관함 폴더에 접근할 수 없습니다.")
+                }
+                var result: [String: Any] = ["content": NSNull()]
+                do {
+                    let fileURL = try self.placesURL(in: folderURL)
+                    var coordinationError: NSError?
+                    var readError: Error?
+                    NSFileCoordinator().coordinate(readingItemAt: fileURL, options: [], error: &coordinationError) { coordURL in
+                        do {
+                            let values = try coordURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+                            guard values.isRegularFile == true, (values.fileSize ?? 0) <= self.maximumPlacesSize else {
+                                throw self.vaultError(code: 2, description: "즐겨찾기 파일은 1MB 이하의 일반 파일이어야 합니다.")
+                            }
+                            result["content"] = try String(contentsOf: coordURL, encoding: .utf8)
+                        } catch { readError = error }
+                    }
+                    if let error = coordinationError ?? readError { throw error }
+                } catch {
+                    let nsError = error as NSError
+                    guard nsError.domain == NSCocoaErrorDomain,
+                          [NSFileReadNoSuchFileError, NSFileNoSuchFileError].contains(nsError.code) else { throw error }
+                }
+                if let refreshed { result["bookmark"] = refreshed }
+                call.resolve(result)
+            } catch {
+                call.reject("즐겨찾기 읽기 실패: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    @objc func writePlaces(_ call: CAPPluginCall) {
+        guard let bookmark = call.getString("bookmark"), let content = call.getString("content") else {
+            call.reject("bookmark, content 가 필요합니다."); return
+        }
+        guard content.utf8.count <= maximumPlacesSize else {
+            call.reject("즐겨찾기 파일은 1MB를 넘을 수 없습니다."); return
+        }
+        fileQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let (folderURL, refreshed) = try self.resolveBookmark(bookmark)
+                let didAccess = folderURL.startAccessingSecurityScopedResource()
+                defer { if didAccess { folderURL.stopAccessingSecurityScopedResource() } }
+                let fileURL = try self.placesURL(in: folderURL)
+                var coordinationError: NSError?
+                var writeError: Error?
+                NSFileCoordinator().coordinate(writingItemAt: fileURL, options: [], error: &coordinationError) { coordURL in
+                    do { try content.write(to: coordURL, atomically: true, encoding: .utf8) }
+                    catch { writeError = error }
+                }
+                if let error = coordinationError ?? writeError { throw error }
+                var result: [String: Any] = [:]
+                if let refreshed { result["bookmark"] = refreshed }
+                call.resolve(result)
+            } catch {
+                call.reject("즐겨찾기 쓰기 실패: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func placesURL(in folderURL: URL) throws -> URL {
+        let url = folderURL.appendingPathComponent(placesFilename)
+        do {
+            let values = try url.resourceValues(forKeys: [.isSymbolicLinkKey])
+            guard values.isSymbolicLink != true else {
+                throw vaultError(code: 2, description: "즐겨찾기 파일에 심볼릭 링크를 사용할 수 없습니다.")
+            }
+        } catch {
+            let nsError = error as NSError
+            guard nsError.domain == NSCocoaErrorDomain,
+                  [NSFileReadNoSuchFileError, NSFileNoSuchFileError].contains(nsError.code) else { throw error }
+        }
+        let safeURL = canonicalURL(url)
+        try ensureInsideVault(safeURL, base: folderURL)
+        return safeURL
     }
 
     // MARK: - 헬퍼

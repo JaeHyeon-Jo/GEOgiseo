@@ -4,6 +4,7 @@
  * 폴더가 옵시디언 vault를 가리키면 여기서 만든 노트가 옵시디언에도 그대로 보인다.
  */
 import { parseNote, serializeNote, type LocationNote } from '@geogiseo/core';
+import { PLACES_FILE } from './places.js';
 
 type DirHandle = FileSystemDirectoryHandle & FileSystemDirectoryHandleEntries;
 
@@ -16,6 +17,31 @@ export function isFsAccessSupported(): boolean {
 export async function pickVault(): Promise<DirHandle> {
   if (!window.showDirectoryPicker) throw new Error('File System Access API 미지원');
   return window.showDirectoryPicker({ mode: 'readwrite' });
+}
+
+export async function readPlaces(dir: DirHandle): Promise<string | null> {
+  let handle: FileSystemFileHandle;
+  try { handle = await dir.getFileHandle(PLACES_FILE); }
+  catch (e) {
+    if ((e as Error).name === 'NotFoundError') return null;
+    throw e;
+  }
+  const file = await handle.getFile();
+  if (file.size > 1024 * 1024) throw new Error('즐겨찾기 파일은 1MB를 넘을 수 없습니다.');
+  return file.text();
+}
+
+export async function writePlaces(dir: DirHandle, content: string): Promise<void> {
+  if (new Blob([content]).size > 1024 * 1024) throw new Error('즐겨찾기 파일은 1MB를 넘을 수 없습니다.');
+  const handle = await dir.getFileHandle(PLACES_FILE, { create: true });
+  const writable = await handle.createWritable();
+  try {
+    await writable.write(content);
+    await writable.close();
+  } catch (e) {
+    await writable.abort().catch(() => {});
+    throw e;
+  }
 }
 
 async function* walk(
