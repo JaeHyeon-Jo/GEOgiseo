@@ -15,9 +15,12 @@ import {
   readAllNotes as readWebNotes,
   writeNote as writeWebNote,
   deleteNote as deleteWebNote,
+  readPlaces as readWebPlaces,
+  writePlaces as writeWebPlaces,
 } from './vault-fs.js';
+import type { PlacesFile } from './places.js';
 
-export interface Vault {
+export interface Vault extends PlacesFile {
   name: string;
   readAll(): Promise<LocationNote[]>;
   write(note: LocationNote): Promise<void>;
@@ -33,6 +36,8 @@ interface VaultAccessPlugin {
   }>;
   writeNote(options: { bookmark: string; path: string; content: string }): Promise<{ bookmark?: string }>;
   deleteNote(options: { bookmark: string; path: string }): Promise<{ bookmark?: string }>;
+  readPlaces(options: { bookmark: string }): Promise<{ content: string | null; bookmark?: string }>;
+  writePlaces(options: { bookmark: string; content: string }): Promise<{ bookmark?: string }>;
 }
 
 const VaultAccess = registerPlugin<VaultAccessPlugin>('VaultAccess');
@@ -51,6 +56,15 @@ function nativeVault(initialBookmark: string, name: string): Vault {
   };
   return {
     name,
+    async readPlaces() {
+      const res = await VaultAccess.readPlaces({ bookmark });
+      remember(res.bookmark);
+      return res.content;
+    },
+    async writePlaces(content) {
+      const res = await VaultAccess.writePlaces({ bookmark, content });
+      remember(res.bookmark);
+    },
     async readAll() {
       const res = await VaultAccess.readNotes({ bookmark });
       remember(res.bookmark);
@@ -84,6 +98,8 @@ function nativeVault(initialBookmark: string, name: string): Vault {
 function webVault(dir: Awaited<ReturnType<typeof pickWebVault>>, name: string): Vault {
   return {
     name,
+    readPlaces: () => readWebPlaces(dir),
+    writePlaces: (content) => writeWebPlaces(dir, content),
     readAll: () => readWebNotes(dir),
     write: (note) => writeWebNote(dir, note),
     delete: (path) => deleteWebNote(dir, path),

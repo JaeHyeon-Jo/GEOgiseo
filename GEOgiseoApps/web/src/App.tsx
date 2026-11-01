@@ -11,6 +11,7 @@ import { noteFilenameByTimePlace, uniquePath } from './notes.js';
 import { isVaultSupported, pickVault, restoreVault, type Vault } from './vault.js';
 import { NativeMap, type NativeMapMarker } from './nativeMap.js';
 import { WatchBridge } from './watchBridge.js';
+import { loadPlaces, cachePlaces, restorePlaces, persistPlaces, type FavoritePlace } from './places.js';
 
 // ── Types ─────────────────────────────────────────────────
 type Tab = 'new' | 'map' | 'notes' | 'settings';
@@ -32,16 +33,6 @@ interface Draft {
   accuracy?: number;
 }
 
-interface FavoritePlace {
-  id: string;
-  name: string;
-  emoji?: string;
-  lat: number;
-  lng: number;
-  radiusM: number;
-  tag: string;
-}
-
 interface PlaceFormState {
   id: string;
   name: string;
@@ -60,7 +51,6 @@ interface SearchResult {
 
 // ── Constants ─────────────────────────────────────────────
 const SEOUL: LatLng = { lat: 37.5665, lng: 126.978 };
-const PLACES_KEY = 'geogiseo-places';
 const LAST_LOC_KEY = 'geogiseo-last-loc';
 // 이보다 오래된 캐시는 콜드 스타트 시작값으로 쓰지 않는다(너무 옛 위치일 확률).
 const LOC_SEED_MAX_AGE = 12 * 3_600_000; // 12시간
@@ -128,14 +118,6 @@ function draftFromNote(n: LocationNote): Draft {
     _initLng: String(loc.lng),
     ...(n.accuracy !== undefined ? { accuracy: n.accuracy } : {}),
   };
-}
-
-function loadPlaces(): FavoritePlace[] {
-  try { return JSON.parse(localStorage.getItem(PLACES_KEY) ?? '[]'); } catch { return []; }
-}
-
-function savePlacesToStorage(places: FavoritePlace[]) {
-  localStorage.setItem(PLACES_KEY, JSON.stringify(places));
 }
 
 // ── Geo math ──────────────────────────────────────────────
@@ -584,6 +566,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [favoritePlaces, setFavoritePlaces] = useState<FavoritePlace[]>(loadPlaces);
+  const [placesBusy, setPlacesBusy] = useState(false);
+  const [placesReady, setPlacesReady] = useState(true);
+  const placesBusyRef = useRef(false);
   const [placeForm, setPlaceForm] = useState<PlaceFormState | null>(null);
   const [placeSearch, setPlaceSearch] = useState('');
   const [placeSearchResults, setPlaceSearchResults] = useState<SearchResult[]>([]);
@@ -702,23 +687,47 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (placesBusyRef.current) return;
     const vault = restoreVault();
     if (!vault) return;
+    setPlacesBusyState(true);
     setNotesLoading(true);
     (async () => {
       try {
         const loaded = await vault.readAll();
         setSource({ kind: 'folder', vault, name: vault.name });
         setNotes(loaded);
+        await loadFolderPlaces(vault);
       } catch (e) {
         setError(`저장된 폴더를 열지 못했습니다: ${(e as Error).message}`);
       } finally {
         setNotesLoading(false);
+        setPlacesBusyState(false);
       }
     })();
   }, []);
 
+  function setPlacesBusyState(busy: boolean) {
+    placesBusyRef.current = busy;
+    setPlacesBusy(busy);
+  }
+
+  async function loadFolderPlaces(vault: Vault) {
+    setPlacesReady(false);
+    setPlaceForm(null);
+    try {
+      const places = await restorePlaces(vault, loadPlaces());
+      cachePlaces(places);
+      setFavoritePlaces(places);
+      setPlacesReady(true);
+    } catch (e) {
+      setError(`즐겨찾기를 불러오지 못했습니다. 보관함을 새로고침해 다시 시도하세요: ${(e as Error).message}`);
+    }
+  }
+
   async function openFolder() {
+    if (placesBusyRef.current) return;
+    setPlacesBusyState(true);
     setError(null);
     try {
       const vault = await pickVault();
@@ -726,21 +735,34 @@ export default function App() {
       setSource({ kind: 'folder', vault, name: vault.name });
       setNotes(loaded);
       setSelectedPath(null);
+      await loadFolderPlaces(vault);
     } catch (e) {
       if ((e as Error).name === 'AbortError') return;
       setError((e as Error).message);
+    } finally {
+      setPlacesBusyState(false);
     }
   }
 
-  async function refresh() {
+  async function refresh(includePlaces = false) {
     if (source.kind !== 'folder') return;
+    if (includePlaces && placesBusyRef.current) return;
+    if (includePlaces) { setPlacesBusyState(true); setError(null); }
     setNotesLoading(true);
     try {
       const loaded = await source.vault.readAll();
       const pendingPath = pendingDeletionRef.current?.path;
       setNotes(pendingPath ? loaded.filter((n) => n.path !== pendingPath) : loaded);
+      if (includePlaces) await loadFolderPlaces(source.vault);
     }
-    finally { setNotesLoading(false); }
+    catch (e) {
+      if (!includePlaces) throw e;
+      setError(`보관함을 새로고침하지 못했습니다: ${(e as Error).message}`);
+    }
+    finally {
+      setNotesLoading(false);
+      if (includePlaces) setPlacesBusyState(false);
+    }
   }
 
   function selectNote(path: string) {
@@ -973,6 +995,7 @@ export default function App() {
   const drainingWatch = useRef(false);
   async function drainWatchNotes() {
     if (!Capacitor.isNativePlatform()) return;
+    if (placesBusyRef.current || !placesReady) return;
     if (source.kind !== 'folder') return; // 저장할 vault가 없으면 큐를 유지하고 다음에 재시도
     if (drainingWatch.current) return;     // 동시 실행 방지
     drainingWatch.current = true;
@@ -1044,17 +1067,17 @@ export default function App() {
 
   // vault가 준비되면(복원 완료/변경) 대기 중이던 워치 메모를 저장
   useEffect(() => {
-    if (source.kind === 'folder') drainWatchRef.current();
-  }, [source.kind]);
+    if (source.kind === 'folder' && placesReady && !placesBusy) drainWatchRef.current();
+  }, [source, placesReady, placesBusy]);
 
   // 즐겨찾기 장소를 워치에 전달 — 워치가 같은 기준(목록 순서상 첫 번째 반경 안 장소)으로 메모를 묶는다.
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform() || placesBusyRef.current || !placesReady) return;
     const places = favoritePlaces.map(({ id, name, emoji, lat, lng, radiusM }) => ({
       id, name, lat, lng, radiusM, ...(emoji ? { emoji } : {}),
     }));
     WatchBridge.syncPlaces({ places }).catch(() => {});
-  }, [favoritePlaces]);
+  }, [favoritePlaces, placesBusy, placesReady]);
 
   // ── Favorite places ────────────────────────────────────
   function resetPlaceFormSearch() {
@@ -1063,23 +1086,27 @@ export default function App() {
   }
 
   function startAddPlace() {
+    if (placesBusyRef.current || !placesReady) return;
     resetPlaceFormSearch();
     const loc = myLocation ?? SEOUL;
     setPlaceForm({ id: crypto.randomUUID(), name: '', emoji: '', lat: loc.lat, lng: loc.lng, radiusM: 200, tag: '' });
   }
 
   function startEditPlace(p: FavoritePlace) {
+    if (placesBusyRef.current || !placesReady) return;
     resetPlaceFormSearch();
     setPlaceForm({ id: p.id, name: p.name, emoji: p.emoji ?? '', lat: p.lat, lng: p.lng, radiusM: p.radiusM, tag: p.tag });
   }
 
   function cancelPlaceForm() {
+    if (placesBusyRef.current) return;
     setPlaceForm(null);
     resetPlaceFormSearch();
     NativeMap.hide().catch(() => {});
   }
 
-  function savePlaceForm() {
+  async function savePlaceForm() {
+    if (placesBusyRef.current || !placesReady) return;
     if (!placeForm || !placeForm.name.trim()) {
       setError('장소 이름을 입력하세요.');
       return;
@@ -1088,16 +1115,31 @@ export default function App() {
       ...favoritePlaces.filter((p) => p.id !== placeForm.id),
       { ...placeForm, name: placeForm.name.trim(), tag: placeForm.tag.trim() },
     ];
-    setFavoritePlaces(updated);
-    savePlacesToStorage(updated);
-    setPlaceForm(null);
-    resetPlaceFormSearch();
+    if (await saveFavoritePlaces(updated)) {
+      setPlaceForm(null);
+      resetPlaceFormSearch();
+    }
   }
 
-  function deletePlace(id: string) {
+  async function saveFavoritePlaces(updated: FavoritePlace[]): Promise<boolean> {
+    if (placesBusyRef.current || !placesReady) return false;
+    setPlacesBusyState(true);
+    setError(null);
+    try {
+      await persistPlaces(source.kind === 'folder' ? source.vault : null, updated);
+      setFavoritePlaces(updated);
+      return true;
+    } catch (e) {
+      setError(`즐겨찾기를 저장하지 못했습니다: ${(e as Error).message}`);
+      return false;
+    } finally {
+      setPlacesBusyState(false);
+    }
+  }
+
+  async function deletePlace(id: string) {
     const updated = favoritePlaces.filter((p) => p.id !== id);
-    setFavoritePlaces(updated);
-    savePlacesToStorage(updated);
+    await saveFavoritePlaces(updated);
   }
 
   async function useCurrentLocForPlace() {
@@ -1679,14 +1721,14 @@ export default function App() {
                     <span className="vault-count">{notes.length}개 노트</span>
                   </div>
                   <div className="vault-actions">
-                    <button className="vault-btn" onClick={refresh} title="새로고침">↻</button>
-                    {isVaultSupported() && <button className="vault-btn" onClick={openFolder}>변경</button>}
+                    <button className="vault-btn" disabled={placesBusy} onClick={() => refresh(true)} title="새로고침">↻</button>
+                    {isVaultSupported() && <button className="vault-btn" disabled={placesBusy} onClick={openFolder}>변경</button>}
                   </div>
                 </div>
               ) : (
                 <div className="vault-row vault-row-empty">
                   {isVaultSupported() ? (
-                    <button className="primary" onClick={openFolder} style={{ width: '100%' }}>폴더 연결</button>
+                    <button className="primary" disabled={placesBusy} onClick={openFolder} style={{ width: '100%' }}>폴더 연결</button>
                   ) : (
                     <p className="muted small">이 브라우저는 폴더 열기를 지원하지 않습니다.</p>
                   )}
@@ -1696,6 +1738,14 @@ export default function App() {
 
             <div className="settings-section">
               <div className="settings-label">즐겨찾기 장소</div>
+              <p className="muted small" style={{ margin: '0 0 8px' }}>
+                {placesBusy ? '즐겨찾기를 저장하거나 불러오는 중…'
+                  : source.kind === 'folder'
+                    ? placesReady
+                      ? '연결한 폴더에 저장됩니다. 재설치 후 같은 폴더를 연결하면 복원됩니다.'
+                      : '즐겨찾기를 불러오지 못했습니다. 보관함의 새로고침 버튼으로 다시 시도하세요.'
+                    : '현재 이 앱에만 저장됩니다. 폴더를 연결하면 즐겨찾기도 함께 보관됩니다.'}
+              </p>
               {favoritePlaces.length === 0 && (
                 <p className="muted small" style={{ margin: '0 0 8px' }}>
                   자주 가는 장소를 등록하면, 해당 반경 내에서 작성한 노트에 태그가 자동으로 붙습니다.
@@ -1731,7 +1781,7 @@ export default function App() {
                   </SwipeToDelete>
                 );
               })}
-              <button onClick={startAddPlace} style={{ marginTop: 4 }}>＋ 장소 추가</button>
+              <button disabled={placesBusy || !placesReady} onClick={startAddPlace} style={{ marginTop: 4 }}>＋ 장소 추가</button>
             </div>
           </div>
         </div>
@@ -1893,9 +1943,9 @@ export default function App() {
       {placeForm && (
         <div className="fullscreen-editor place-page">
           <div className="fse-header">
-            <button className="link fse-cancel" onClick={cancelPlaceForm}>취소</button>
+            <button className="link fse-cancel" disabled={placesBusy} onClick={cancelPlaceForm}>취소</button>
             <span className="fse-title">{isEditingExistingPlace ? '장소 편집' : '장소 추가'}</span>
-            <button className="fse-save" onClick={savePlaceForm}>저장</button>
+            <button className="fse-save" disabled={placesBusy || !placesReady} onClick={savePlaceForm}>저장</button>
           </div>
           {/* 화면 크기는 고정, 키보드 높이만큼 하단 여백만 늘려 스크롤로 입력칸을 보이게 한다 */}
           <div className="editor-inner" style={keyboardH > 0 ? { paddingBottom: keyboardH + 16 } : undefined}>
