@@ -1,5 +1,15 @@
 # 변경 기록
 
+## 2026-11-07 — 문서 목록과 Markdown 표시
+
+- 문서 목록을 둥근 버튼 대신 구분선으로 정리하고 본문에 Markdown·GFM 렌더링을 적용했다. frontmatter는 계속 숨기고 HTML은 실행하지 않는다. 위키링크와 로컬 첨부는 지원하지 않는다.
+- 서버 전체 빌드·타입 검사·테스트와 `ios:sync` 통과. 원격 CI 및 iPhone 실기기 검증은 아직 하지 않았다.
+
+## 2026-11-07 — 문서·Watch 변경 검증 및 main 반영
+
+- 최초 원격 검증이 `iOS-27-1-iPhone19` 형태의 새 런타임 식별자를 숫자로 변환하다 실패해 시뮬레이터 선택 코드를 수정했다. [Verify 42353035525](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42353035525)에서 웹 검증·iPhone/Watch 빌드·Watch 단위 테스트 통과.
+- 사용자 요청에 따라 [PR #6](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/6)을 squash 머지했다. main `3eec4af32b0be4a5b76627d876a61f920afd052c`. Cloud 빌드 `1af3e237-d85a-4c39-9f10-591a27f6b62c` pending으로 자동 실행을 확인했다. 최종 결과와 TestFlight 설치 가능 여부는 미확인이다. 공개 저장소는 그대로 유지했으며 추후 비공개 전환은 별도 작업이다.
+
 ## 2026-11-07 — Watch 입력 화면 바로 열기 시도
 
 - 기존 거기서 컴플리케이션 URL을 받으면 별도 입력 시트를 열고 텍스트 필드에 자동 포커스를 요청한다. 입력 완료 시 기존 WatchStore 저장·전송 경로를 사용한다. 앱 내 수동 기록 버튼은 유지한다.

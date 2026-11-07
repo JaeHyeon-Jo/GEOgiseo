@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { pickReadingFolder, restoreReadingFolder, type ReadingDocument, type ReadingFolder } from './reading-folder.js';
+import { ReadingContent } from './ReadingContent.js';
 
 export function ReadingTab() {
   const [folder, setFolder] = useState<ReadingFolder | null>(restoreReadingFolder);
@@ -42,7 +43,7 @@ export function ReadingTab() {
     {selected ? <div className="reader-scroll">
       <h2>{selected.path.split('/').pop()?.replace(/\.md$/i, '')}</h2>
       <p className="muted small">{selected.path}</p>
-      <pre className="reader-content">{selected.content.replace(/^---\s*\r?\n[\s\S]*?\r?\n---\s*(?:\r?\n|$)/, '')}</pre>
+      <ReadingContent content={selected.content} />
     </div> : <div className="reader-scroll">
       {!folder && <p className="muted">읽고 싶은 문서가 있는 폴더를 선택해 주세요. 메모 저장 폴더와 별도로 설정됩니다.</p>}
       {folder && <div className="reader-folder"><span>📁 {folder.name} · 하위 폴더 포함</span><button className="vault-btn" onClick={() => void load(folder)} disabled={busy}>새로고침</button></div>}
