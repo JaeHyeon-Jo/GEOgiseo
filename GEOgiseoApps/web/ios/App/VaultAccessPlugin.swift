@@ -85,21 +85,31 @@ public class VaultAccessPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDel
                 let didAccess = folderURL.startAccessingSecurityScopedResource()
                 defer { if didAccess { folderURL.stopAccessingSecurityScopedResource() } }
 
+                let folderValues = try folderURL.resourceValues(forKeys: [.isDirectoryKey])
+                guard folderValues.isDirectory == true else {
+                    throw self.vaultError(code: 2, description: "폴더에 접근할 수 없습니다.")
+                }
                 var notes: [[String: String]] = []
                 var skippedNoteCount = 0
                 let keys: [URLResourceKey] = [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
-                let enumerator = FileManager.default.enumerator(
+                guard let enumerator = FileManager.default.enumerator(
                     at: folderURL,
                     includingPropertiesForKeys: keys,
-                    options: [.skipsHiddenFiles, .skipsPackageDescendants]
-                )
-                while let fileURL = enumerator?.nextObject() as? URL {
+                    options: [.skipsHiddenFiles, .skipsPackageDescendants],
+                    errorHandler: { _, _ in skippedNoteCount += 1; return true }
+                ) else {
+                    throw self.vaultError(code: 2, description: "폴더를 열 수 없습니다.")
+                }
+                while let fileURL = enumerator.nextObject() as? URL {
                     guard fileURL.pathExtension.lowercased() == "md" else { continue }
                     do {
                         let values = try fileURL.resourceValues(forKeys: Set(keys))
                         guard values.isRegularFile == true,
                               values.isSymbolicLink != true,
-                              (values.fileSize ?? 0) <= self.maximumNoteSize else { continue }
+                              (values.fileSize ?? 0) <= self.maximumNoteSize else {
+                            skippedNoteCount += 1
+                            continue
+                        }
                         let safeURL = try self.validatedExistingNoteURL(fileURL, in: folderURL)
                         let content = try String(contentsOf: safeURL, encoding: .utf8)
                         notes.append(["path": self.relativePath(of: safeURL, base: folderURL), "content": content])

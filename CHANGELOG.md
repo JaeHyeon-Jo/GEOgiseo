@@ -1,11 +1,26 @@
 # 변경 기록
 
+## 2026-11-07 — Watch 입력 화면 바로 열기 시도
+
+- 기존 거기서 컴플리케이션 URL을 받으면 별도 입력 시트를 열고 텍스트 필드에 자동 포커스를 요청한다. 입력 완료 시 기존 WatchStore 저장·전송 경로를 사용한다. 앱 내 수동 기록 버튼은 유지한다.
+- Apple 플랫폼 문서상 포커스 요청은 가능하지만 받아쓰기가 즉시 시작된다고 보장할 근거는 없다. Apple 컴파일, Watch 화면·받아쓰기·저장·취소·전송은 미검증이다.
+
+## 2026-11-07 — 문서 폴더와 Watch 입력 검토
+
+- 두 번째 탭을 읽기 전용 문서 폴더로 바꿨다. 저장 보관함과 독립적으로 폴더를 선택하고 하위 Markdown 문서를 읽으며 iOS는 별도 북마크를 복원한다. 원본은 수정하지 않고 frontmatter를 숨긴 Markdown 원문을 표시한다. 실패한 문서 수와 폴더 오류를 표시한다.
+- Watch의 기존 컴플리케이션·TextFieldLink·App Intent 및 Apple의 WidgetKit 입력 제한과 단축어 실행 경로를 검토했다. 바로 받아쓰기의 실기기 동작은 검증하지 못해 Watch 코드는 변경하지 않았다.
+- 서버 전체 빌드·타입 검사·테스트 및 iOS 자산 동기화 통과. Apple 컴파일·원격 CI·TestFlight·실기기 검증은 미실시.
+
 ## 2026-11-01 — 즐겨찾기 보관함 저장
 
 - 즐겨찾기가 앱 내부 `localStorage`에만 저장되어 재설치 시 사라지는 원인을 확인하고, 연결한 보관함 루트의 `geogiseo-places.json`에 저장하도록 수정했다. 기존 앱 데이터는 파일이 없을 때만 이관하고 같은 폴더를 다시 연결하면 파일에서 복원한다. 폴더 미연결 시 앱 내부 저장은 유지한다.
 - 웹/Swift VaultAccess에 즐겨찾기 전용 읽기·쓰기를 추가했다. Swift는 고정 파일명·보안 스코프·파일 조정·원자적 쓰기·용량 제한·심볼릭 링크 제한을 적용한다. 기존 Markdown 노트 경로 정책은 유지한다.
 - 파일이 있는 보관함은 파일 내용을 우선한다. 빈 목록 삭제 상태도 복원하며, 읽기/파싱 실패를 파일 없음으로 취급하지 않는다. 저장 중 중복 편집을 막고 실패하면 오류를 표시한다. 즐겨찾기 복원이 끝난 뒤 Watch 장소 목록과 대기 메모를 처리한다.
-- 서버 전체 TS 빌드·타입 검사·테스트 통과. 웹 테스트는 기존 7개에 복원·이관·삭제·손상/권한/쓰기 실패 등을 검사하는 22개를 추가해 29개 통과했다. 최종 소스의 `ios:sync`와 커스텀 플러그인 3개 등록도 확인했다. Apple 컴파일·원격 Verify·실기기 재설치·TestFlight 배포는 이번 변경에 대해 아직 확인하지 않았다.
+- 서버 전체 TS 빌드·타입 검사·테스트 통과. 웹 테스트는 기존 7개에 복원·이관·삭제·손상/권한/쓰기 실패 등을 검사하는 22개를 추가해 29개 통과했다. 최종 소스의 `ios:sync`와 커스텀 플러그인 3개 등록도 확인했다. 아래 원격 검증·머지 결과까지 확인했으며 실기기 재설치·TestFlight 설치 가능 여부는 미확인이다.
+
+- [PR #5](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/5), 검증 head `e95aef7b86318a77b6caac66c7a926565811a73c`. [Verify run 41254904251](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41254904251) 성공: TS 테스트 69개, Xcode 27.1의 iPhone 빌드(Watch 포함), Watch 단위 테스트 4개 통과. 최초 Watch 시뮬레이터 실행 오류(`Application has termination assertions`)는 코드 변경 없이 실패 작업을 재시도해 통과했다. 로그는 Git 제외 `.local/verification-favorites-20261101/`에 보관한다.
+- 사용자 “진행해” 승인으로 검증 head를 지정해 PR #5를 main에 squash 머지했다. 머지 커밋 `816649da172dc24da5b1e2dfb2ce0f51de5aaf18`, 원격 PR merged/closed·서버 main fast-forward·검증 head와 파일 트리 동일 확인. 새 커밋의 Cloud 상태 pending 및 빌드 `2664be47-8ec2-4577-a869-b81798084448` 연결로 자동 실행 시작을 확인했다. 최종 빌드·TestFlight 설치 가능 여부는 미확인이다. 결과 문서만을 위해 main을 추가 push하지 않는다.
+- GitHub Actions 후속 확인: 최신 Verify attempt 2와 [main 웹 배포 41255757859](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41255757859)의 build/deploy 모두 성공했다. 오류 제보에 따라 attempt 1의 실패 이력과 최종 결과를 구분해 재확인했으며, 새 실패는 확인되지 않아 코드 변경이나 재실행 없이 결과만 로컬에 기록했다.
 
 ## 2026-11-01 — 서버 원격 개발 환경
 

@@ -56,14 +56,14 @@ jobs:
         run: |
           xcodebuild -version
           python3 - <<'PY'
-          import json, os, subprocess
+          import json, os, re, subprocess
           devices = json.loads(subprocess.check_output(
               ['xcrun', 'simctl', 'list', 'devices', 'available', '--json']))['devices']
           for platform, name, variable in [
               ('iOS', 'iPhone', 'GEOGISEO_IPHONE_ID'),
               ('watchOS', 'Apple Watch', 'GEOGISEO_WATCH_ID'),
           ]:
-              candidates = [(tuple(map(int, runtime.split(f'.{platform}-')[1].split('-'))), device)
+              candidates = [(tuple(map(int, re.match(r'\d+(?:-\d+)*', runtime.split(f'.{platform}-')[1]).group().split('-'))), device)
                             for runtime, items in devices.items() if f'.{platform}-' in runtime
                             for device in items if device.get('isAvailable') and name in device['name']]
               if not candidates:
