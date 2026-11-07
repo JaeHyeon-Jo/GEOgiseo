@@ -505,6 +505,42 @@ struct RecordView: View {
     }
 }
 
+// 컴플리케이션에서 열었을 때 시스템 텍스트 입력에 포커스를 요청한다.
+// 받아쓰기 시작 여부는 watchOS와 사용자의 입력 설정에 따라 달라진다.
+struct QuickInputView: View {
+    @ObservedObject var location: WatchLocation
+    @ObservedObject var store: WatchStore
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var inputFocused: Bool
+    @State private var text = ""
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("메모 입력").font(.headline)
+            TextField("음성 또는 텍스트", text: $text)
+                .focused($inputFocused)
+                .submitLabel(.done)
+                .onSubmit { save() }
+            Button("저장") { save() }
+                .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding()
+        .task {
+            // 화면이 표시된 뒤 포커스를 요청한다. 취소 후 자동으로 다시 열지 않는다.
+            await Task.yield()
+            inputFocused = true
+        }
+    }
+
+    private func save() {
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return }
+        store.add(text: value, location: location.last, place: location.placeName)
+        text = ""
+        dismiss()
+    }
+}
+
 // MARK: - 메모 리스트 / 상세
 
 /// 전송 상태 표시. 적녹 색맹에서도 구분되도록 색(파랑/노랑) + 모양(✓/시계)을 함께 쓴다.
@@ -634,6 +670,7 @@ struct ContentView: View {
     @StateObject private var location = WatchLocation()
     @ObservedObject private var store = WatchStore.shared
     @State private var page = 0
+    @State private var quickInputPresented = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -642,6 +679,9 @@ struct ContentView: View {
             MemoListView(store: store).tag(1)
         }
         .tabViewStyle(.page)
+        .sheet(isPresented: $quickInputPresented) {
+            QuickInputView(location: location, store: store)
+        }
         .onAppear {
             store.activate()
             location.requestOnce()
@@ -650,11 +690,13 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { store.activate() }
         }
-        // 컴플리케이션(geogiseo://record)으로 열리면 기록 화면으로 이동하고 위치를 새로 잡는다.
+        // 컴플리케이션에서 입력 화면을 열고 위치를 새로 잡는다.
         .onOpenURL { url in
             guard url.scheme == "geogiseo", url.host == "record" else { return }
             page = 0
+            store.activate()
             location.requestOnce()
+            quickInputPresented = true
         }
     }
 }

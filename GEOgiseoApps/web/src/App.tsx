@@ -11,6 +11,7 @@ import { noteFilenameByTimePlace, uniquePath } from './notes.js';
 import { isVaultSupported, pickVault, restoreVault, type Vault } from './vault.js';
 import { NativeMap, type NativeMapMarker } from './nativeMap.js';
 import { WatchBridge } from './watchBridge.js';
+import { ReadingTab } from './ReadingTab.js';
 import { loadPlaces, cachePlaces, restorePlaces, persistPlaces, type FavoritePlace } from './places.js';
 
 // ── Types ─────────────────────────────────────────────────
@@ -1604,105 +1605,7 @@ export default function App() {
         />
       )}
 
-      {/* ── 메모 탭 (타임라인) ── */}
-      {tab === 'notes' && (
-        <div className="tab-pane">
-          <div className="tab-header note-tab-header">
-            <strong>메모</strong>
-          </div>
-          <div className="note-view-controls" aria-label="메모 정렬 방식">
-            <div className="view-seg">
-              <button
-                className={`view-seg-btn${notesView === 'date' ? ' active' : ''}`}
-                onClick={() => setNotesView('date')}
-              >날짜</button>
-              <button
-                className={`view-seg-btn${notesView === 'place' ? ' active' : ''}`}
-                onClick={() => setNotesView('place')}
-              >장소</button>
-            </div>
-          </div>
-          <div className="note-search">
-            <input
-              type="search"
-              value={noteQuery}
-              onChange={(e) => setNoteQuery(e.target.value)}
-              placeholder="메모 검색"
-              enterKeyHint="search"
-              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-            />
-            {noteQuery && (
-              <button className="note-search-clear" onClick={() => setNoteQuery('')} aria-label="검색어 지우기">✕</button>
-            )}
-          </div>
-          <div className="timeline">
-            {notesLoading && (
-              <div className="timeline-empty">
-                <p className="muted">노트를 불러오는 중…</p>
-              </div>
-            )}
-            {!notesLoading && notes.length === 0 && (
-              <div className="timeline-empty">
-                <p className="muted">아직 메모가 없습니다.</p>
-                {source.kind === 'none' && <p className="muted small">설정에서 폴더를 연결하세요.</p>}
-              </div>
-            )}
-            {/* 검색 중이면 검색 결과만 최신순으로 */}
-            {searchResults && (
-              <div className="timeline-group">
-                <div className="timeline-date-header">
-                  검색 결과<span className="muted small"> · {searchResults.length}개</span>
-                </div>
-                {searchResults.length === 0 && (
-                  <div className="timeline-empty"><p className="muted">일치하는 메모가 없습니다.</p></div>
-                )}
-                {searchResults.map((n) => renderNoteItem(n, { withDate: true }))}
-              </div>
-            )}
-            {/* 가까운 메모 바로가기 — 날짜 보기 상단 가로 카드. 목록에서는 빼지 않는다
-                (빼면 집처럼 자주 쓰는 곳의 메모가 날짜 목록에서 사라져 보인다).
-                장소 보기는 이미 거리순 그룹이라 생략. */}
-            {!searchResults && !notesLoading && notesView === 'date' && nearbyMemos.length > 0 && (
-              <section className="nearby-memo-section" aria-labelledby="nearby-memo-title">
-                <div className="nearby-memo-heading">
-                  <strong id="nearby-memo-title">내 주변</strong>
-                  <span>{NEARBY_MEMO_M / 1000}km 이내 · 가까운 순</span>
-                </div>
-                <div className="nearby-memo-scroll">
-                  {nearbyMemos.map(renderNearbyMemoCard)}
-                </div>
-              </section>
-            )}
-            {/* 날짜별 보기 */}
-            {!searchResults && notesView === 'date' && sortedNoteGroups.map((g) => (
-              <div key={g.header} className="timeline-group">
-                <div className="timeline-date-header">{g.header}</div>
-                {g.items.map((n) => renderNoteItem(n))}
-              </div>
-            ))}
-            {/* 장소별 보기 (거리순) */}
-            {!searchResults && notesView === 'place' && placeNoteGroups.map((g) => {
-              const items = g.items;
-              const gid = g.place ? g.place.id : '__other__';
-              const gdist = g.place && myLocation
-                ? distanceM(myLocation, { lat: g.place.lat, lng: g.place.lng })
-                : null;
-              return (
-                <div key={gid} className="timeline-group">
-                  <div className="timeline-date-header">
-                    {g.place
-                      ? <>{g.place.emoji ? `${g.place.emoji} ` : ''}{g.place.name}</>
-                      : '그 외'}
-                    {gdist !== null && <span className="muted small"> · {fmtDist(gdist)}</span>}
-                    <span className="muted small"> · {items.length}개</span>
-                  </div>
-                  {items.map((n) => renderNoteItem(n, { showPlace: false, withDate: true }))}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {tab === 'notes' && <ReadingTab />}
 
       {/* ── 설정 탭 ── */}
       {tab === 'settings' && (
@@ -2053,7 +1956,7 @@ export default function App() {
             </button>
             <button className={`nav-item${tab === 'notes' ? ' active' : ''}`} onClick={() => setTab('notes')}>
               <IconNote />
-              <span>메모</span>
+              <span>문서</span>
             </button>
             <button className={`nav-item${tab === 'map' ? ' active' : ''}`} onClick={() => setTab('map')}>
               <IconMap />

@@ -1,6 +1,6 @@
 # GEOgiseo — AI 작업 맥락
 
-최종 갱신: 2026-11-01. 작업 전에 읽고 의미 있는 작업 후 갱신한다. 과거 변경 경위는 `CHANGELOG.md`에 기록한다.
+최종 갱신: 2026-11-07. 작업 전에 읽고 의미 있는 작업 후 갱신한다. 과거 변경 경위는 `CHANGELOG.md`에 기록한다.
 
 ## 프로젝트 목적
 
@@ -47,20 +47,24 @@
 
 ## 현재 상태
 
-- 서버 체크아웃·저장소별 SSH·Git 작성자 설정 완료. D+Day 저장소·전역 SSH/Git 설정은 변경하지 않았다.
-- 기준 main: `b79f8235feae4ebe5c14d665c4444a8820e93dc3`([PR #4](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/4) 머지). 사용자가 main 머지·기존 Cloud 배포 진행을 승인했다. 원격 merged/closed와 서버 main fast-forward를 확인했다. 검증한 코드와 차이는 인수인계·변경 기록 2개 파일뿐이며 앱·워크플로는 동일하다.
-- 새 main의 `GEOgiseo | GEOgiseo` pending과 [Cloud 빌드 d6e66d2a-e7a5-4970-9446-fd65aa7fe601](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/d6e66d2a-e7a5-4970-9446-fd65aa7fe601) 연결로 자동 실행 시작을 확인했다. 빌드 최종 결과·TestFlight 설치 가능 여부는 미확인이다.
-- 환경 구성: [PR #4](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/4), 검증한 코드 `4a9ce787100061ce9f8c2a13cecd30d304477b60`.
-- [Verify run 41252896587](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41252896587) 전체 성공: Node 22의 TS 빌드·타입 검사·테스트 47개(core 27·web 7·MCP 13), Xcode 27.1의 iOS 27.1 iPhone Duo 빌드(Watch 포함)·watchOS 27.0 Apple Watch Ultra 4 단위 테스트 4개 통과. Watch xcresult 아티팩트 7일 보관.
-- 서버에서도 잠금 파일 설치·전체 TS 빌드·타입 검사·테스트, `ios:sync`·커스텀 플러그인 3개 등록, YAML·내장 Python·plist·스킴·문서 링크·diff 검사 통과. 원격 로그는 Git 제외 `.local/verification-20261101/`에 보관한다.
-- 이번 머지 결과 문서는 중복 배포를 피하도록 서버 로컬에 기록한다. 이 기록만을 위해 main을 추가 push하지 않는다.
-- 현재 작업 브랜치 `fix/favorites-vault-persistence`: 사용자 요청에 따라 즐겨찾기 폴더 저장을 구현했다. iOS VaultAccess에 고정 JSON 파일 전용 읽기·원자적 쓰기를 추가하고 웹 File System Access에도 연결했다. 재연결/재실행/수동 새로고침으로 복원하며 추가·수정·삭제는 파일 저장 성공 후 화면에 반영한다. 즐겨찾기 복원 후 Watch 장소 동기화·대기 메모 처리를 진행한다. 기존 Markdown 경로 제한·보안 스코프·플러그인 등록은 유지한다.
-- 이번 변경의 서버 검증: 전체 TS 빌드·타입 검사·테스트 통과, 웹 테스트 29개(기존 7 + 신규 22) 통과. 앱 캐시 초기화 후 복원·이관·폴더별 파일 우선·빈 목록·손상 파일·읽기/쓰기 실패·웹 파일 스트림 실패를 검사했다. 최종 소스의 `ios:sync`·커스텀 Swift 플러그인 3개 등록·diff 검사도 통과했다. Apple 컴파일·원격 Verify·실기기·이번 변경의 배포는 아직 미확인이다.
-- 사용자가 “메인에 머지 했어?” 후 “진행해”로 즐겨찾기 변경의 커밋·PR 검증·main 머지와 기존 Cloud 후속 빌드 확인을 승인했다. 원격 Verify가 통과하면 해당 head를 지정해 머지하고, 결과는 추가 배포를 일으키지 않도록 로컬 문서에 기록한다.
+- 작업 브랜치 `feature/watch-folder-reading`: iPhone 두 번째 탭을 날짜·장소 메모 목록에서 읽기 전용 문서 탭으로 교체했다. 메모 보관함과 별도로 폴더를 선택하고 하위 폴더의 Markdown 원문을 읽는다. iOS 북마크는 별도 저장하며 탭 진입·수동 새로고침 시 다시 읽는다. YAML frontmatter는 화면에서 숨기고 본문은 Markdown 원문으로 표시한다. 웹 폴더 핸들은 재실행 후 다시 선택해야 한다. 지도·메모 저장 경로는 유지한다.
+- 서버 전체 빌드·타입 검사·테스트 및 `ios:sync` 통과. 읽기 폴더의 하위 문서·실패·권한 오류 테스트를 추가했다. Apple 빌드·원격 CI·TestFlight·실기기 폴더 권한/iCloud 반영은 미검증이다.
+- Watch 컴플리케이션 `geogiseo://record`가 새 입력 시트를 열고 `TextField`에 포커스를 요청하도록 변경했다. 완료 시 기존 Watch 저장·전송을 사용한다. 포커스가 시스템 입력 화면을 여는지, 받아쓰기가 자동 시작되는지, 취소·반복 실행·위치·전송은 실제 기기에서 미검증이다. 입력 방식은 watchOS가 결정한다. 기존 앱 내 `TextFieldLink`는 유지한다. 이전의 iPhone 단축어 안내는 해당 App Intent가 Watch 전용이어서 검증되지 않았다.
+
+- 서버 체크아웃·저장소별 SSH·Git 작성자 설정 완료. D+Day 저장소·전역 SSH/Git 설정은 변경하지 않았다. 기존 원격 개발·검증 환경은 PR #4에서 구성했다.
+- 현재 main: `816649da172dc24da5b1e2dfb2ce0f51de5aaf18`([PR #5](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/5) 머지). 사용자가 “메인에 머지 했어?” 후 “진행해”로 커밋·PR 검증·main 머지와 기존 Cloud 후속 빌드 확인을 승인했다. 원격 merged/closed·서버 main fast-forward 확인. 검증한 head `e95aef7b86318a77b6caac66c7a926565811a73c`와 머지 결과의 파일 트리는 동일하다.
+- 즐겨찾기 폴더 저장 구현 완료. iOS VaultAccess와 웹 File System Access에 고정 JSON 파일 읽기·쓰기를 추가했다. 재연결/재실행/수동 새로고침으로 복원하며 추가·수정·삭제는 파일 저장 성공 후 화면에 반영한다. 복원 후 Watch 장소 동기화·대기 메모 처리를 진행한다. 기존 Markdown 경로 제한·보안 스코프·플러그인 등록은 유지한다.
+- 서버 전체 TS 빌드·타입 검사·테스트, 최종 소스의 `ios:sync`·커스텀 Swift 플러그인 3개 등록·diff 검사 통과. 웹 테스트는 기존 7개에 복원·이관·빈 목록·손상/권한/쓰기 실패 등을 검사하는 22개를 추가했다.
+- [Verify run 41254904251](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41254904251) 전체 성공: TS 테스트 69개(core 27·web 29·MCP 13), Xcode 27.1·iOS 27.1 iPhone Duo 빌드(Watch 포함), watchOS 27.0 Apple Watch Ultra 4 단위 테스트 4개 통과. 최초 Apple 작업은 Watch 시뮬레이터의 `Application has termination assertions` 실행 오류로 테스트 시작 전에 실패했으며, 코드 변경 없이 실패 작업만 재시도해 통과했다. 로그는 Git 제외 `.local/verification-favorites-20261101/`에 보관한다.
+- GitHub Actions 오류 제보 후 재확인: 최신 Verify의 attempt 2 및 [main Pages 배포 41255757859](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/41255757859)의 build/deploy 모두 success다. 최근 실행 목록에는 새 실패가 없으며, 확인된 실패는 위 Verify attempt 1의 Watch 실행 오류다. 사용자가 본 실패 알림이 해당 attempt인지 자체는 미확인이다. 추가 코드 수정·재실행·push는 하지 않았다.
+- 새 main의 `GEOgiseo | GEOgiseo` pending과 [Cloud 빌드 2664be47-8ec2-4577-a869-b81798084448](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/2664be47-8ec2-4577-a869-b81798084448) 연결로 자동 실행 시작을 확인했다. 빌드 최종 결과·TestFlight 설치 가능 여부는 미확인이다.
+- 머지 결과 문서는 중복 배포를 피하도록 서버 로컬에 기록한다. 이 기록만을 위해 main을 추가 push하지 않는다.
 
 ## 미확인 사항과 다음 일
 
+- 문서 폴더의 iCloud 접근·재시작 복원·변경/새로고침 및 Markdown 원문 가독성을 iPhone에서 검증한다. Watch 변경은 원격 Apple 빌드 후 실기기에서 컴플리케이션의 콜드/웜 실행, 입력 화면·받아쓰기 자동 시작 여부, 취소·반복·저장·오프라인 전송을 확인한다.
+
 - main 반영에 따른 Cloud 자동 시작은 확인했다. 새 빌드 최종 상태·Archive 배포 후속 작업·TestFlight 그룹과 설치 가능 여부는 App Store Connect에서 별도 확인 필요. 커밋 success만으로 TestFlight 배포 완료를 단정하지 않는다.
 - 후속 변경은 작업 브랜치 → PR Verify → main 반영 → 기존 Cloud 빌드/배포 확인 순서로 진행한다.
-- 즐겨찾기 변경은 iOS `ios:sync` 후 원격 Verify/Mac에서 컴파일하고, 실기기에서 기존 즐겨찾기 이관 → 앱 삭제 → 같은 외부 폴더 재연결 → 장소·이모지·반경·태그 복원을 검증한다. 복원에는 폴더/JSON 파일이 남아 있어야 하며 앱 삭제로 함께 제거되는 폴더는 보존을 보장하지 않는다. 폴더 권한은 재설치 후 사용자가 다시 부여해야 한다. 실시간 다중 기기 병합은 구현하지 않았으며 외부 파일 변경은 재실행/수동 새로고침으로 반영한다.
+- 즐겨찾기 변경의 원격 Apple 컴파일·Watch 단위 테스트는 통과했다. 실기기에서 기존 즐겨찾기 이관 → 앱 삭제 → 같은 외부 폴더 재연결 → 장소·이모지·반경·태그 복원을 검증한다. 복원에는 폴더/JSON 파일이 남아 있어야 하며 앱 삭제로 함께 제거되는 폴더는 보존을 보장하지 않는다. 폴더 권한은 재설치 후 사용자가 다시 부여해야 한다. 실시간 다중 기기 병합은 구현하지 않았으며 외부 파일 변경은 재실행/수동 새로고침으로 반영한다.
 - GPS·Vault 폴더 권한·iCloud 왕복·WatchConnectivity·컴플리케이션·단축어는 실제 기기로 확인한다.
