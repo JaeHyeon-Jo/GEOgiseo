@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { pickReadingFolder, restoreReadingFolder, type ReadingDocument, type ReadingFolder } from './reading-folder.js';
 import { ReadingContent } from './ReadingContent.js';
+import { isReaderBackSwipe, startReaderSwipe, type SwipeStart } from './reader-swipe.js';
 
 export function ReadingTab() {
   const [folder, setFolder] = useState<ReadingFolder | null>(restoreReadingFolder);
@@ -10,6 +11,7 @@ export function ReadingTab() {
   const [error, setError] = useState('');
   const [skipped, setSkipped] = useState(0);
   const request = useRef(0);
+  const swipe = useRef<SwipeStart | null>(null);
 
   async function load(next: ReadingFolder) {
     const id = ++request.current;
@@ -35,7 +37,17 @@ export function ReadingTab() {
     }
   }
 
-  return <div className="tab-pane">
+  return <div className="tab-pane"
+    onTouchStart={e => { swipe.current = selected ? startReaderSwipe(e.touches) : null; }}
+    onTouchMove={e => { if (e.touches.length !== 1) swipe.current = null; }}
+    onTouchCancel={() => { swipe.current = null; }}
+    onTouchEnd={e => {
+      const start = swipe.current;
+      swipe.current = null;
+      if (!selected || !start || e.touches.length !== 0) return;
+      const touch = Array.from(e.changedTouches).find(item => item.identifier === start.id);
+      if (touch && isReaderBackSwipe(start, touch)) setSelected(null);
+    }}>
     <div className="tab-header">
       {selected ? <button className="vault-btn" onClick={() => setSelected(null)}>‹ 목록</button> : <strong>문서</strong>}
       {!selected && <button className="vault-btn" onClick={() => void choose()} disabled={busy}>{folder ? '폴더 변경' : '폴더 선택'}</button>}

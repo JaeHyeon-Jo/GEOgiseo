@@ -47,6 +47,9 @@
 
 ## 현재 상태
 
+- 작업 브랜치 `feature/document-swipe-back`: 문서 상세 화면의 왼쪽 가장자리에서 오른쪽으로 밀면 목록으로 돌아간다. 세로 이동·짧은 이동·다중 터치는 제외한다. 서버 전체 빌드·타입 검사·테스트 및 `ios:sync` 통과. iPhone 실기기 제스처 및 원격 CI는 미검증이다.
+- 같은 브랜치에서 Watch 컴플리케이션이 띄우던 자동 메모 입력 시트·포커스를 제거했다. `geogiseo://record`는 기존 마이크 버튼 기록 화면으로 이동하고 위치를 요청한다. 실제 Watch 화면·입력과 Apple 빌드는 미검증이다.
+- [PR #7](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/7)을 사용자 요청으로 squash 머지했다. main `1ef84ea22344bf81289f268a2e409ee31e680acc`, 검증 head `a7c7ebcbaafbd7b501ae5e26f650ce77cd0dfded`. [Verify 42356494923](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42356494923)은 머지 당시 Watch 단위 테스트가 진행 중이었으나 이후 전체 성공했다. [Xcode Cloud 빌드](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/6e7aea86-d606-4623-abdc-7a0a651a38d4)의 커밋 상태도 success다. TestFlight 및 실기기는 미확인이다.
 - 문서 탭 목록의 둥근 버튼 테두리를 제거하고 구분선 형태로 바꿨다. 본문은 frontmatter를 숨긴 뒤 Markdown 및 GFM 표·체크 목록을 렌더링한다. HTML은 실행하지 않는다. Obsidian 위키링크·로컬 첨부 연결은 별도 구현하지 않았다. 서버 전체 빌드·타입 검사·테스트와 `ios:sync` 통과. 원격 CI·iPhone 실기기 화면은 미검증이다.
 - [PR #6](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/6)을 사용자 요청으로 공개 저장소 main에 squash 머지했다. main 커밋 `3eec4af32b0be4a5b76627d876a61f920afd052c`, 검증 head `afa0e091cff68cf5b3cd36b46ab0bb80626de427`. 문서 탭과 Watch 입력 시도, 시뮬레이터 버전 파싱 수정 포함. 사용자는 저장소를 추후 비공개로 전환하겠다고 했으며 전환은 아직 하지 않았다.
 - [Verify 42353035525](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42353035525) 전체 성공: TS 빌드·타입 검사·테스트, iPhone 빌드(Watch 포함), Watch 단위 테스트. 최초 검증은 새 시뮬레이터 런타임의 접미사 파싱 오류로 Apple 컴파일 전에 실패했으며 워크플로 수정 후 통과했다.
@@ -54,7 +57,7 @@
 
 - PR #6: iPhone 두 번째 탭을 날짜·장소 메모 목록에서 읽기 전용 문서 탭으로 교체했다. 메모 보관함과 별도로 폴더를 선택하고 하위 폴더의 Markdown 원문을 읽는다. iOS 북마크는 별도 저장하며 탭 진입·수동 새로고침 시 다시 읽는다. YAML frontmatter는 화면에서 숨기고 본문은 Markdown 원문으로 표시한다. 웹 폴더 핸들은 재실행 후 다시 선택해야 한다. 지도·메모 저장 경로는 유지한다.
 - 서버 전체 빌드·타입 검사·테스트 및 `ios:sync` 통과. 읽기 폴더의 하위 문서·실패·권한 오류 테스트를 추가했다. Apple 빌드와 원격 CI 결과는 위와 같으며 TestFlight·실기기 폴더 권한/iCloud 반영은 미검증이다.
-- Watch 컴플리케이션 `geogiseo://record`가 새 입력 시트를 열고 `TextField`에 포커스를 요청하도록 변경했다. 완료 시 기존 Watch 저장·전송을 사용한다. 포커스가 시스템 입력 화면을 여는지, 받아쓰기가 자동 시작되는지, 취소·반복 실행·위치·전송은 실제 기기에서 미검증이다. 입력 방식은 watchOS가 결정한다. 기존 앱 내 `TextFieldLink`는 유지한다. 이전의 iPhone 단축어 안내는 해당 App Intent가 Watch 전용이어서 검증되지 않았다.
+- Watch 컴플리케이션의 자동 입력 시도는 사용자 피드백으로 위 작업 브랜치에서 제거했다. 기존 앱 내 `TextFieldLink`는 유지한다. 이전의 iPhone 단축어 안내는 해당 App Intent가 Watch 전용이어서 검증되지 않았다.
 
 - 서버 체크아웃·저장소별 SSH·Git 작성자 설정 완료. D+Day 저장소·전역 SSH/Git 설정은 변경하지 않았다. 기존 원격 개발·검증 환경은 PR #4에서 구성했다.
 - 이전 main: `816649da172dc24da5b1e2dfb2ce0f51de5aaf18`([PR #5](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/5) 머지). 사용자가 “메인에 머지 했어?” 후 “진행해”로 커밋·PR 검증·main 머지와 기존 Cloud 후속 빌드 확인을 승인했다. 원격 merged/closed·서버 main fast-forward 확인. 검증한 head `e95aef7b86318a77b6caac66c7a926565811a73c`와 머지 결과의 파일 트리는 동일하다.

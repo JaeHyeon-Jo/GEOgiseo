@@ -1,5 +1,18 @@
 # 변경 기록
 
+## 2026-11-07 — Watch 자동 입력 화면 제거
+
+- 원치 않는 메모 입력 팝업에 대한 피드백으로 컴플리케이션의 자동 입력 시트와 포커스를 제거했다. 컴플리케이션은 기존 마이크 버튼 화면을 열고 입력은 버튼으로 시작한다. Apple 빌드와 실기기는 미검증이다.
+
+## 2026-11-07 — 문서 스와이프 뒤로가기
+
+- 문서 상세에서 왼쪽 가장자리의 오른쪽 스와이프로 목록에 돌아가는 제스처를 추가했다. 짧은 이동, 세로 스크롤, 다중 터치는 제외한다. 서버 빌드·타입 검사·테스트와 `ios:sync` 통과, 실기기는 미검증이다.
+- PR #7의 Verify는 이후 Watch 단위 테스트까지 전체 성공했고 해당 main 커밋의 Xcode Cloud 상태도 success로 확인했다. TestFlight 설치 가능 여부는 미확인이다.
+
+## 2026-11-07 — 문서 화면 변경 main 반영
+
+- [PR #7](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/7)을 main `1ef84ea22344bf81289f268a2e409ee31e680acc`에 squash 머지했다. [Verify](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42356494923)의 웹 검증과 iPhone·Watch 빌드는 성공했고 Watch 테스트는 진행 중이다. 새 Cloud 빌드는 pending이며 TestFlight·실기기는 미확인이다.
+
 ## 2026-11-07 — 문서 목록과 Markdown 표시
 
 - 문서 목록을 둥근 버튼 대신 구분선으로 정리하고 본문에 Markdown·GFM 렌더링을 적용했다. frontmatter는 계속 숨기고 HTML은 실행하지 않는다. 위키링크와 로컬 첨부는 지원하지 않는다.
