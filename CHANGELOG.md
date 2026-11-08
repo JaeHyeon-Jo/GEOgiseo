@@ -1,5 +1,19 @@
 # 변경 기록
 
+## 2026-11-08 — Watch 단축어 완료 문구 제거
+
+- `거기서 기록` 단축어에서 기록 완료·중복 안내 문구를 제거했다. Apple 빌드와 워치의 실제 완료 표시 및 저장은 미검증이다.
+- 거기서 컴플리케이션에서 앱을 열 때 같은 기록 App Intent의 입력 요청을 시도한다. 오류·취소 시 기존 기록 화면을 사용할 수 있다. 입력 자동 표시와 저장은 실기기 검증이 필요하다.
+
+## 2026-11-08 — Watch 컴플리케이션 마이크 아이콘
+
+- 워치 페이스의 한 줄·모서리·직사각형 컴플리케이션에서 표시 문구를 제거했다. 선택 목록의 이름과 VoiceOver 레이블은 ‘거기서 기록’이며, 탭하면 기록 화면을 여는 기존 URL을 사용한다.
+- 서버 검증과 [PR Verify](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42475078579)의 iPhone·Watch 빌드 및 Watch 단위 테스트 통과. [PR #10](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/10)을 main `1d1806e8f6ac9d0c451b58c25ca965727d8a77b4`에 squash 머지했다. Xcode Cloud는 pending이며 TestFlight와 실기기는 미확인이다.
+
+## 2026-11-08 — Weekly 별표 main 반영
+
+- [PR #9](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/9)을 main `7b85911159d61c6ec41363b09b4bfced7e1ec9ff`에 squash 머지했다. [Verify](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42453221368)의 웹 검증·iPhone 및 Watch 빌드·Watch 단위 테스트 통과. 새 Cloud 빌드는 pending이며 TestFlight·실기기는 미확인이다.
+
 ## 2026-11-08 — Weekly 주제 별표
 
 - Weekly 문서의 주제 제목에서 ⭐를 추가·해제하고 원본 Markdown에 저장한다. iOS 파일 조정 및 저장 전 본문 비교, 웹 쓰기 권한 및 본문 비교를 추가했다. 다른 기기와의 iCloud 동시 쓰기가 완전히 원자적이라고 보장하지 않는다.
