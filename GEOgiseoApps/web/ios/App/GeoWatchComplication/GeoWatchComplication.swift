@@ -35,21 +35,14 @@ struct GeoWatchComplicationEntryView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            HStack(spacing: 6) {
-                Image(systemName: "mic.fill")
-                    .font(.title2)
-                VStack(alignment: .leading) {
-                    Text("거기서").font(.headline)
-                    Text("탭해서 기록").font(.caption2).foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
-            }
+            Image(systemName: "mic.fill")
+                .font(.title2)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .accessoryInline:
-            Label("거기서 기록", systemImage: "mic.fill")
+            Text("\(Image(systemName: "mic.fill"))")
         case .accessoryCorner:
             Image(systemName: "mic.fill")
                 .font(.title3)
-                .widgetLabel("거기서")
         default: // accessoryCircular
             ZStack {
                 AccessoryWidgetBackground()
@@ -66,6 +59,7 @@ struct GeoWatchComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             GeoWatchComplicationEntryView(entry: entry)
+                .accessibilityLabel("거기서 기록")
                 .containerBackground(.fill.tertiary, for: .widget)
                 .widgetURL(URL(string: "geogiseo://record"))
         }
