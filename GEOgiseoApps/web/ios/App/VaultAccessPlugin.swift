@@ -13,6 +13,7 @@ public class VaultAccessPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDel
         CAPPluginMethod(name: "pickFolder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readNotes", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "writeNote", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "replaceWeekly", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteNote", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readPlaces", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "writePlaces", returnType: CAPPluginReturnPromise)
@@ -132,6 +133,45 @@ public class VaultAccessPlugin: CAPPlugin, CAPBridgedPlugin, UIDocumentPickerDel
     }
 
     // MARK: - 노트 쓰기
+
+    // 같은 기기에서 조정된 파일을 읽고 비교한 뒤에만 교체한다.
+    @objc func replaceWeekly(_ call: CAPPluginCall) {
+        guard let bookmark = call.getString("bookmark"), let path = call.getString("path"),
+              let expected = call.getString("expected"), let content = call.getString("content") else {
+            call.reject("bookmark, path, expected, content 가 필요합니다."); return
+        }
+        guard URL(fileURLWithPath: path).lastPathComponent.range(of: #"^\d{4}-W\d{2}\.md$"#, options: [.regularExpression, .caseInsensitive]) != nil,
+              content.utf8.count <= maximumNoteSize else {
+            call.reject("Weekly Markdown 파일만 수정할 수 있습니다."); return
+        }
+        fileQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let (folderURL, refreshed) = try self.resolveBookmark(bookmark)
+                let didAccess = folderURL.startAccessingSecurityScopedResource()
+                defer { if didAccess { folderURL.stopAccessingSecurityScopedResource() } }
+                let candidate = try self.validatedNoteURL(for: path, in: folderURL)
+                let values = try candidate.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+                guard values.isRegularFile == true, values.isSymbolicLink != true,
+                      (values.fileSize ?? 0) <= self.maximumNoteSize else {
+                    throw self.vaultError(code: 2, description: "Weekly 파일을 열 수 없습니다.")
+                }
+                var coordinationError: NSError?
+                var operationError: Error?
+                NSFileCoordinator().coordinate(writingItemAt: candidate, options: [], error: &coordinationError) { url in
+                    do {
+                        let current = try Data(contentsOf: url)
+                        guard current == Data(expected.utf8) else { throw self.vaultError(code: 4, description: "파일이 다른 곳에서 변경되었어요. 새로고침 후 다시 시도해 주세요.") }
+                        try content.write(to: url, atomically: true, encoding: .utf8)
+                    } catch { operationError = error }
+                }
+                if let error = coordinationError ?? operationError { throw error }
+                var result: [String: Any] = [:]
+                if let refreshed = refreshed { result["bookmark"] = refreshed }
+                call.resolve(result)
+            } catch { call.reject("별표 저장 실패: \(error.localizedDescription)") }
+        }
+    }
 
     @objc func writeNote(_ call: CAPPluginCall) {
         guard let bookmark = call.getString("bookmark"),

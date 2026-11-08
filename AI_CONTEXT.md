@@ -47,8 +47,9 @@
 
 ## 현재 상태
 
-- 작업 브랜치 `feature/document-swipe-back`: 문서 상세 화면의 왼쪽 가장자리에서 오른쪽으로 밀면 목록으로 돌아간다. 세로 이동·짧은 이동·다중 터치는 제외한다. 서버 전체 빌드·타입 검사·테스트 및 `ios:sync` 통과. iPhone 실기기 제스처 및 원격 CI는 미검증이다.
-- 같은 브랜치에서 Watch 컴플리케이션이 띄우던 자동 메모 입력 시트·포커스를 제거했다. `geogiseo://record`는 기존 마이크 버튼 기록 화면으로 이동하고 위치를 요청한다. 실제 Watch 화면·입력과 Apple 빌드는 미검증이다.
+- 작업 브랜치 `feature/weekly-stars`: `YYYY-Www.md` 문서의 주제 제목에 별 버튼을 표시하고 선택한 파일에 ⭐를 추가·해제한다. 현재 `###` 주제 형식과 과거 `##` 주제 형식을 지원하며 기존 복수 별은 해제할 때 함께 제거한다. iOS는 파일 조정 중 전체 원문을 바이트 비교한 뒤 쓰고, 웹은 쓰기 권한을 요청하고 현재 본문을 비교한다. 불일치·권한 오류 시 저장하지 않고 안내한다. 기기 간 동시 쓰기와 iCloud 전파 전체가 원자적으로 보장되는 것은 아니다. 서버 빌드·타입 검사·테스트·`ios:sync` 통과. Apple 컴파일, 실제 iPhone 권한·iCloud 동기화·관심사 자동 반영은 미검증이다.
+- [PR #8](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/8)을 사용자 요청으로 squash 머지했다. main `c2c7cc99f6c66ce4181c965a17b5de368667a27f`, 검증 head `441b6f32ddbbb18ad2430256c45115cbc98ae1a1`. [Verify 42373896403](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42373896403)에서 웹 빌드·타입 검사·테스트, iPhone·Watch 빌드 및 Watch 단위 테스트 통과. [Xcode Cloud 빌드](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/bea91207-679f-49d1-b34d-8c26ba4acee6)는 pending이고 TestFlight 및 실기기는 미확인이다.
+- 문서 상세 화면의 왼쪽 가장자리에서 오른쪽으로 밀면 목록으로 돌아간다. 세로 이동·짧은 이동·다중 터치는 제외한다. Watch 컴플리케이션의 자동 메모 입력 시트·포커스는 제거했고 기존 마이크 버튼 기록 화면을 연다. iPhone 제스처 및 Watch 화면·입력은 실기기 미검증이다.
 - [PR #7](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/7)을 사용자 요청으로 squash 머지했다. main `1ef84ea22344bf81289f268a2e409ee31e680acc`, 검증 head `a7c7ebcbaafbd7b501ae5e26f650ce77cd0dfded`. [Verify 42356494923](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42356494923)은 머지 당시 Watch 단위 테스트가 진행 중이었으나 이후 전체 성공했다. [Xcode Cloud 빌드](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/6e7aea86-d606-4623-abdc-7a0a651a38d4)의 커밋 상태도 success다. TestFlight 및 실기기는 미확인이다.
 - 문서 탭 목록의 둥근 버튼 테두리를 제거하고 구분선 형태로 바꿨다. 본문은 frontmatter를 숨긴 뒤 Markdown 및 GFM 표·체크 목록을 렌더링한다. HTML은 실행하지 않는다. Obsidian 위키링크·로컬 첨부 연결은 별도 구현하지 않았다. 서버 전체 빌드·타입 검사·테스트와 `ios:sync` 통과. 원격 CI·iPhone 실기기 화면은 미검증이다.
 - [PR #6](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/6)을 사용자 요청으로 공개 저장소 main에 squash 머지했다. main 커밋 `3eec4af32b0be4a5b76627d876a61f920afd052c`, 검증 head `afa0e091cff68cf5b3cd36b46ab0bb80626de427`. 문서 탭과 Watch 입력 시도, 시뮬레이터 버전 파싱 수정 포함. 사용자는 저장소를 추후 비공개로 전환하겠다고 했으며 전환은 아직 하지 않았다.

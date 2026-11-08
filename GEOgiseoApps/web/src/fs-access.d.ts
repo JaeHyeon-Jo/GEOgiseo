@@ -3,6 +3,7 @@
  * 표준 lib.dom에 아직 포함되지 않은 부분(showDirectoryPicker, 디렉터리 순회)만 보강한다.
  */
 interface FileSystemDirectoryHandleEntries {
+  requestPermission(descriptor?: { mode?: 'read' | 'readwrite' }): Promise<PermissionState>;
   entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
   getDirectoryHandle(
     name: string,

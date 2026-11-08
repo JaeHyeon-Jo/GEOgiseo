@@ -1,5 +1,14 @@
 # 변경 기록
 
+## 2026-11-08 — Weekly 주제 별표
+
+- Weekly 문서의 주제 제목에서 ⭐를 추가·해제하고 원본 Markdown에 저장한다. iOS 파일 조정 및 저장 전 본문 비교, 웹 쓰기 권한 및 본문 비교를 추가했다. 다른 기기와의 iCloud 동시 쓰기가 완전히 원자적이라고 보장하지 않는다.
+- 서버 전체 빌드·타입 검사·테스트 및 `ios:sync` 통과. Apple 빌드와 실기기 iCloud·자동화 연동은 미검증이다.
+
+## 2026-11-07 — 문서·Watch 변경 main 반영
+
+- [PR #8](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/8)을 main `c2c7cc99f6c66ce4181c965a17b5de368667a27f`에 squash 머지했다. [Verify](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42373896403)의 웹 검증·iPhone 및 Watch 빌드·Watch 단위 테스트 전체 성공. 새 Cloud 빌드는 pending이며 TestFlight와 실기기는 미확인이다.
+
 ## 2026-11-07 — Watch 자동 입력 화면 제거
 
 - 원치 않는 메모 입력 팝업에 대한 피드백으로 컴플리케이션의 자동 입력 시트와 포커스를 제거했다. 컴플리케이션은 기존 마이크 버튼 화면을 열고 입력은 버튼으로 시작한다. Apple 빌드와 실기기는 미검증이다.
