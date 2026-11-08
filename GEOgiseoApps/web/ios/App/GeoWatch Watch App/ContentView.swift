@@ -8,11 +8,11 @@
 //
 
 import SwiftUI
-import AppIntents
 import Combine
 import CoreLocation
 import MapKit
 import WatchConnectivity
+import WatchKit
 
 // MARK: - 모델
 
@@ -635,7 +635,9 @@ struct ContentView: View {
     @StateObject private var location = WatchLocation()
     @ObservedObject private var store = WatchStore.shared
     @State private var page = 0
-    @State private var isStartingQuickRecord = false
+    @State private var quickRecordPending = false
+    @State private var isPresentingQuickRecord = false
+    @State private var quickRecordUnavailable = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -644,27 +646,62 @@ struct ContentView: View {
             MemoListView(store: store).tag(1)
         }
         .tabViewStyle(.page)
+        .alert("입력창을 열 수 없어요", isPresented: $quickRecordUnavailable) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("마이크를 눌러 기록해 주세요.")
+        }
         .onAppear {
             store.activate()
             location.requestOnce()
+            presentQuickRecordIfNeeded()
         }
         // 앱으로 돌아올 때마다 전송 대기 메모를 다시 보낸다.
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { store.activate() }
+            if phase == .active {
+                store.activate()
+                presentQuickRecordIfNeeded()
+            }
         }
-        // 컴플리케이션에서 단축어와 같은 입력 동작을 시도한다.
+        // 컴플리케이션에서 열면 시스템 입력창을 표시한다.
         .onOpenURL { url in
             guard url.scheme == "geogiseo", url.host == "record" else { return }
             page = 0
             store.activate()
             location.requestOnce()
-            guard !isStartingQuickRecord else { return }
-            isStartingQuickRecord = true
-            Task { @MainActor in
-                defer { isStartingQuickRecord = false }
-                // 입력을 요청할 수 없거나 취소하면 기존 기록 화면을 그대로 사용한다.
-                let _: Void? = try? await AddMemoIntent()(donate: false)
+            guard !isPresentingQuickRecord else { return }
+            quickRecordPending = true
+            presentQuickRecordIfNeeded()
+        }
+    }
+
+    private func presentQuickRecordIfNeeded() {
+        guard quickRecordPending, !isPresentingQuickRecord, scenePhase == .active else { return }
+        quickRecordPending = false
+        isPresentingQuickRecord = true
+
+        Task { @MainActor in
+            defer { isPresentingQuickRecord = false }
+
+            // 콜드 실행에서는 화면 컨트롤러가 생성될 때까지 잠시 기다린다.
+            for _ in 0..<20 {
+                guard scenePhase == .active else {
+                    quickRecordPending = true
+                    return
+                }
+                if let controller = WKApplication.shared().visibleInterfaceController {
+                    let results = await controller.presentTextInputController(
+                        withSuggestions: nil,
+                        allowedInputMode: .plain
+                    )
+                    guard let text = (results?.first as? String)?
+                        .trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return }
+                    store.add(text: text, location: location.last, place: location.placeName)
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(100))
             }
+            quickRecordUnavailable = true
         }
     }
 }
