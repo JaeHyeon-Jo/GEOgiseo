@@ -18,7 +18,7 @@ struct AddMemoIntent: AppIntent {
     @Parameter(title: "내용", requestValueDialog: "뭐라고 적을까요?")
     var text: String
 
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> IntentResultContainer<Never, Never, Never, Never> {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else {
             throw $text.needsValueError("뭐라고 적을까요?")
