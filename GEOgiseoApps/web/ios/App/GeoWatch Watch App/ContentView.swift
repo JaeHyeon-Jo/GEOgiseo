@@ -662,7 +662,7 @@ struct ContentView: View {
             Task { @MainActor in
                 defer { isStartingQuickRecord = false }
                 // 입력을 요청할 수 없거나 취소하면 기존 기록 화면을 그대로 사용한다.
-                try? await AddMemoIntent()(donate: false)
+                let _: Void? = try? await AddMemoIntent()(donate: false)
             }
         }
     }
