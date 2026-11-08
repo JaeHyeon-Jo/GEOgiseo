@@ -1,8 +1,13 @@
 # 변경 기록
 
+## 2026-11-09 — Watch 기록 완료 표시 통일
+
+- 컴플리케이션에서 바로 입력한 메모도 앱의 마이크 입력과 같은 `기록됨` 표시를 사용한다. 사용자가 기존 버전에서 컴플리케이션 탭 후 입력창이 바로 열리는 것을 실기기로 확인했다. 변경된 완료 표시는 실기기 미검증이다.
+
 ## 2026-11-08 — Watch 컴플리케이션 입력창 직접 열기
 
 - 컴플리케이션에서 워치 시스템 텍스트 입력창을 직접 표시하고 입력한 메모를 기존 워치 저장 경로로 기록한다. 앱 활성화 및 컨트롤러 준비를 기다리며 취소·빈 입력은 저장하지 않는다. 실기기 동작은 미검증이다.
+- [PR #13](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/13)을 main `f72df3f57ea3bcddeac0534b6f123a0422d84f44`에 머지했다. 서버 검사 및 [Verify](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42489896330)의 웹 검사·iPhone/Watch 빌드·Watch 단위 테스트 통과. Xcode Cloud pending이며 TestFlight·실기기 미확인이다.
 
 ## 2026-11-08 — Watch 컴플리케이션 기록 표시
 

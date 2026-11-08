@@ -454,7 +454,8 @@ func memoDate(_ ts: Double) -> Date {
 struct RecordView: View {
     @ObservedObject var location: WatchLocation
     @ObservedObject var store: WatchStore
-    @State private var justSent = false
+    let justSent: Bool
+    let onSubmit: (String) -> Void
 
     /// 즐겨찾기 반경 안이면 그 이름, 아니면 동네 이름.
     private var placeLine: String {
@@ -477,7 +478,7 @@ struct RecordView: View {
                     }
                     .frame(width: 92, height: 92)
                 } onSubmit: { text in
-                    submit(text)
+                    onSubmit(text)
                 }
                 .buttonStyle(.plain)
                 // 손가락 더블 탭(엄지·검지 두 번)으로 마이크 버튼을 누른 것처럼 받아쓰기 시작.
@@ -493,16 +494,6 @@ struct RecordView: View {
             }
         }
         .padding()
-    }
-
-    private func submit(_ text: String) {
-        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !t.isEmpty else { return }
-        WatchStore.shared.add(text: t, location: location.last, place: location.placeName)
-        withAnimation { justSent = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-            withAnimation { justSent = false }
-        }
     }
 }
 
@@ -635,6 +626,8 @@ struct ContentView: View {
     @StateObject private var location = WatchLocation()
     @ObservedObject private var store = WatchStore.shared
     @State private var page = 0
+    @State private var justSent = false
+    @State private var feedbackTask: Task<Void, Never>?
     @State private var quickRecordPending = false
     @State private var isPresentingQuickRecord = false
     @State private var quickRecordUnavailable = false
@@ -642,7 +635,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $page) {
-            RecordView(location: location, store: store).tag(0)
+            RecordView(location: location, store: store, justSent: justSent, onSubmit: saveMemo).tag(0)
             MemoListView(store: store).tag(1)
         }
         .tabViewStyle(.page)
@@ -694,14 +687,27 @@ struct ContentView: View {
                         withSuggestions: nil,
                         allowedInputMode: .plain
                     )
-                    guard let text = (results?.first as? String)?
-                        .trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return }
-                    store.add(text: text, location: location.last, place: location.placeName)
+                    guard let text = results?.first as? String else { return }
+                    saveMemo(text)
                     return
                 }
                 try? await Task.sleep(for: .milliseconds(100))
             }
             quickRecordUnavailable = true
+        }
+    }
+
+    private func saveMemo(_ text: String) {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+
+        store.add(text: trimmedText, location: location.last, place: location.placeName)
+        feedbackTask?.cancel()
+        withAnimation { justSent = true }
+        feedbackTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(1400))
+            guard !Task.isCancelled else { return }
+            withAnimation { justSent = false }
         }
     }
 }
