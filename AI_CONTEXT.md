@@ -1,6 +1,6 @@
 # GEOgiseo — AI 작업 맥락
 
-최종 갱신: 2026-11-08. 작업 전에 읽고 의미 있는 작업 후 갱신한다. 과거 변경 경위는 `CHANGELOG.md`에 기록한다.
+최종 갱신: 2026-11-09. 작업 전에 읽고 의미 있는 작업 후 갱신한다. 과거 변경 경위는 `CHANGELOG.md`에 기록한다.
 
 ## 프로젝트 목적
 
@@ -47,7 +47,8 @@
 
 ## 현재 상태
 
-- 작업 브랜치 `fix/watch-complication-input`에서 컴플리케이션이 기존 App Intent를 앱 내부에서 재호출하는 방식 대신 WatchKit 시스템 텍스트 입력창을 직접 표시하도록 변경했다. 앱 활성화와 컨트롤러 준비를 기다리고, 취소·빈 입력은 저장하지 않으며 기존 WatchStore 경로로 위치와 함께 저장한다. 워치 콜드·웜 실행, 입력창, 취소, 반복, 위치·저장 및 오프라인 전송은 실기기 미검증이다. 이전 방식의 호출 오류는 기록되지 않아 실제 실패 원인은 확인되지 않았다.
+- 사용자가 Watch 컴플리케이션 탭으로 입력창이 바로 열리는 것을 실기기에서 확인했다. 작업 브랜치 `fix/watch-recorded-feedback`에서 컴플리케이션 입력과 앱 마이크 입력의 저장·`기록됨` 표시를 통일했다. 표시와 취소·빈 입력 동작은 새 빌드에서 실기기 확인이 필요하다.
+- [PR #13](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/13)을 main `f72df3f57ea3bcddeac0534b6f123a0422d84f44`에 squash 머지했다. 컴플리케이션은 WatchKit 시스템 텍스트 입력창을 직접 표시한다. 앱 활성화와 컨트롤러 준비를 기다리고, 취소·빈 입력은 저장하지 않으며 기존 WatchStore 경로로 위치와 함께 저장한다. 서버 검사 및 [Verify 42489896330](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42489896330)의 웹 검사·iPhone/Watch 빌드·Watch 단위 테스트 통과. [Xcode Cloud](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/26e654fc-198d-4a56-8870-0158555d6ab0)는 pending이고 TestFlight 및 워치 콜드·웜 실행, 입력창, 취소, 반복, 위치·저장 및 오프라인 전송은 실기기 미검증이다. 이전 방식의 호출 오류는 기록되지 않아 실제 실패 원인은 확인되지 않았다.
 - [PR #12](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/12)를 main `d4713906f4d42e0bb57f85c70ce356b4d5a77724`에 squash 머지했다. 모든 Watch 컴플리케이션 형태에 마이크와 `기록`을 표시한다. 서버 검사 및 [Verify 42487565264](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42487565264) 웹 검사·iPhone/Watch 빌드·Watch 단위 테스트 통과. [Xcode Cloud](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/d0a18f1b-297a-4f4f-91cf-5dd308997b1e)는 pending. 실제 가독성·터치 영역·TestFlight는 미확인이다. 사용자는 직전 입력 자동 표시 시도가 기존과 같다고 보고했으나 실행한 설치 빌드와 원인은 미확인이다.
 - [PR #11](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/11)을 main `4679d9cc4447ddc9a9601bd542af4fb875f1b21b`에 squash 머지했다. Watch의 `거기서 기록` App Intent에서 완료·중복 문구를 제거하고 컴플리케이션 탭 시 같은 App Intent의 입력 요청을 시도한다. 오류·취소 시 기존 기록 화면을 사용한다. 서버 검사와 [Verify 42484722488](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42484722488)의 웹 검사, iPhone·Watch 빌드 및 Watch 단위 테스트 통과. 이전 실행은 Watch 시뮬레이터 연결 시간 초과로 중단했다. [Xcode Cloud](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/d04f4668-e635-440f-b97f-f4ce56ab08a3)는 pending, TestFlight·실기기는 미확인이다. 워치 전용 App Shortcut이 아이폰과 단축어 컴플리케이션 목록에 보이지 않는다는 사용자 실기기 확인이 있다.
 - [PR #10](https://github.com/JaeHyeon-Jo/GEOgiseo/pull/10)을 main `1d1806e8f6ac9d0c451b58c25ca965727d8a77b4`에 squash 머지했다. Watch 페이스의 모든 컴플리케이션 형태에서 마이크 아이콘을 표시하고 선택 목록 이름·VoiceOver 레이블과 기록 화면 URL을 유지한다. 서버 검증 및 [Verify 42475078579](https://github.com/JaeHyeon-Jo/GEOgiseo/actions/runs/42475078579)의 웹·코어 검사, iPhone·Watch 빌드, Watch 단위 테스트가 통과했다. [Xcode Cloud 빌드](https://appstoreconnect.apple.com/teams/7b082e5e-b72d-483e-aef2-ba1ba57e9d43/apps/6829224561/ci/builds/044848d6-daf8-4140-aea9-a85816fbb6a5)는 pending이며 TestFlight·실기기는 미확인이다.
