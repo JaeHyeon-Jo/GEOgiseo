@@ -1942,3 +1942,5 @@ button.swipe-action-btn {
 .reader-content th, .reader-content td { border: 1px solid var(--border, #ddd); padding: 6px 10px; }
 .reader-content img { max-width: 100%; height: auto; }
 .reader-content input[type='checkbox'] { margin-right: .4em; }
+.reader-heading { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+button.reader-star { flex: none; padding: 4px; min-width: 40px; min-height: 40px; background: transparent; border-radius: 8px; font-size: 24px; line-height: 1; color: var(--accent); }
