@@ -35,19 +35,26 @@ struct GeoWatchComplicationEntryView: View {
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            Image(systemName: "mic.fill")
-                .font(.title2)
+            Label("기록", systemImage: "mic.fill")
+                .labelStyle(.titleAndIcon)
+                .font(.headline)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .accessoryInline:
-            Text("\(Image(systemName: "mic.fill"))")
+            Text("\(Image(systemName: "mic.fill")) 기록")
         case .accessoryCorner:
-            Image(systemName: "mic.fill")
-                .font(.title3)
+            Label("기록", systemImage: "mic.fill")
+                .labelStyle(.titleAndIcon)
+                .font(.caption2)
+                .minimumScaleFactor(0.8)
+                .lineLimit(1)
         default: // accessoryCircular
             ZStack {
                 AccessoryWidgetBackground()
-                Image(systemName: "mic.fill")
-                    .font(.title2)
+                Label("기록", systemImage: "mic.fill")
+                    .labelStyle(.titleAndIcon)
+                    .font(.caption2)
+                    .minimumScaleFactor(0.8)
+                    .lineLimit(1)
             }
         }
     }
