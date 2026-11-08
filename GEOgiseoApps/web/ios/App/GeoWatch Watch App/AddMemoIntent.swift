@@ -18,7 +18,7 @@ struct AddMemoIntent: AppIntent {
     @Parameter(title: "내용", requestValueDialog: "뭐라고 적을까요?")
     var text: String
 
-    func perform() async throws -> some IntentResult & ProvidesDialog {
+    func perform() async throws -> some IntentResult {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else {
             throw $text.needsValueError("뭐라고 적을까요?")
@@ -37,15 +37,11 @@ struct AddMemoIntent: AppIntent {
             try? await Task.sleep(for: .milliseconds(100))
         }
 
-        let (didAdd, favoriteName) = await MainActor.run {
-            let store = WatchStore.shared
-            return (store.addFromIntent(text: t, location: location, place: place),
-                    store.favorite(at: location)?.name)
+        _ = await MainActor.run {
+            WatchStore.shared.addFromIntent(text: t, location: location, place: place)
         }
 
-        // 즐겨찾기 반경 안이면 "집에서", 아니면 동네 이름
-        let where_ = (favoriteName ?? place).map { "\($0)에서 " } ?? ""
-        return .result(dialog: didAdd ? "\(where_)기록했어요." : "이미 기록했어요.")
+        return .result()
     }
 }
 

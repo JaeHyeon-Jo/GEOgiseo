@@ -634,6 +634,7 @@ struct ContentView: View {
     @StateObject private var location = WatchLocation()
     @ObservedObject private var store = WatchStore.shared
     @State private var page = 0
+    @State private var isStartingQuickRecord = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -650,12 +651,19 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { store.activate() }
         }
-        // 컴플리케이션에서 기록 화면을 열고 위치를 새로 잡는다.
+        // 컴플리케이션에서 단축어와 같은 입력 동작을 시도한다.
         .onOpenURL { url in
             guard url.scheme == "geogiseo", url.host == "record" else { return }
             page = 0
             store.activate()
             location.requestOnce()
+            guard !isStartingQuickRecord else { return }
+            isStartingQuickRecord = true
+            Task { @MainActor in
+                defer { isStartingQuickRecord = false }
+                // 입력을 요청할 수 없거나 취소하면 기존 기록 화면을 그대로 사용한다.
+                try? await AddMemoIntent()(donate: false)
+            }
         }
     }
 }
